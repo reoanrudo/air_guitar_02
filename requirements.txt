@@ -26,6 +26,7 @@ django-celery-beat>=2.5
 # ----- Database -----
 psycopg2-binary>=2.9
 dj-database-url>=2.1
+gunicorn>=21.2
 
 # ----- Utilities -----
 qrcode>=7.4
