@@ -13,4 +13,5 @@ urlpatterns = [
     path("", views.GuitarView.as_view(), name="guitar"),
     path("api/start/", views.start_practice, name="start_practice"),
     path("api/end/", views.end_practice, name="end_practice"),
+    path("qr/", views.generate_qr_code, name="generate_qr_code"),
 ]

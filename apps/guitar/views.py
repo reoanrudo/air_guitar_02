@@ -6,9 +6,12 @@ Guitar views for VirtuTune
 
 import json
 import logging
+import uuid
+import qrcode
+import io
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -35,10 +38,20 @@ class GuitarView(LoginRequiredMixin, TemplateView):
         コンテキストデータを取得する
 
         Returns:
-            dict: コードデータを含むコンテキスト
+            dict: コードデータとQRコード用URLを含むコンテキスト
         """
         context = super().get_context_data(**kwargs)
         context["chords"] = Chord.objects.all()
+
+        # モバイルコントローラー用のセッションIDを生成
+        session_id = str(uuid.uuid4())[:8]
+        context["session_id"] = session_id
+
+        # モバイルコントローラーのURLを構築
+        request = self.request
+        mobile_url = f"{request.scheme}://{request.get_host()}/mobile/controller/?session={session_id}"
+        context["mobile_controller_url"] = mobile_url
+
         return context
 
 
@@ -182,3 +195,50 @@ def end_practice(request):
             extra={"user_id": request.user.id},
         )
         return JsonResponse({"error": "サーバーエラーが発生しました"}, status=500)
+
+
+@login_required
+def generate_qr_code(request):
+    """
+    QRコード生成API
+
+    GET /guitar/qr/
+
+    クエリパラメータ:
+        session: セッションID（任意）
+
+    レスポンス:
+        QRコード画像（PNG）
+
+    エラー:
+        401: 未ログイン
+    """
+    try:
+        # セッションIDを取得（指定がない場合は生成）
+        session_id = request.GET.get("session", str(uuid.uuid4())[:8])
+
+        # モバイルコントローラーのURLを構築
+        mobile_url = f"{request.scheme}://{request.get_host()}/mobile/controller/?session={session_id}"
+
+        # QRコードを生成
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(mobile_url)
+        qr.make(fit=True)
+
+        # 画像をバイト列に変換
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        # レスポンスを返す
+        return HttpResponse(buffer, content_type="image/png")
+
+    except Exception as e:
+        logger.error(f"QRコード生成失敗: {str(e)}", exc_info=True)
+        return HttpResponse("QRコードの生成に失敗しました", status=500)
