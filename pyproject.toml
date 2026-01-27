@@ -36,3 +36,4 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--verbose --tb=short"
 testpaths = ["apps"]
+asyncio_mode = "auto"

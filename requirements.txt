@@ -5,16 +5,18 @@
 
 # ----- Django Framework -----
 Django>=5.0,<6.0
-django-environ>=1.0
+python-decouple>=3.8
 
 # ----- Django Extensions -----
 django-extensions>=3.2
 django-ratelimit>=4.1
+django-redis>=5.4
 
 # ----- WebSocket (Real-time Communication) -----
 channels>=4.0
 channels-redis>=4.2
 redis>=5.0
+daphne>=4.0
 
 # ----- Task Queue (Reminders) -----
 celery>=5.3

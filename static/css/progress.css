@@ -1,0 +1,702 @@
+/**
+ * Progress Page Styles for VirtuTune
+ *
+ * 進捗表示ページのスタイル定義
+ */
+
+/* ============================
+   Container & Layout
+   ============================ */
+.progress-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.progress-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.progress-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.progress-header .subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+}
+
+/* ============================
+   Goal Section
+   ============================ */
+.goal-section {
+    margin-bottom: 3rem;
+}
+
+.goal-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.goal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+}
+
+.goal-card.goal-achieved {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    animation: celebrate 0.5s ease;
+}
+
+@keyframes celebrate {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+.goal-icon {
+    font-size: 4rem;
+    flex-shrink: 0;
+}
+
+.icon-achieved {
+    animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.goal-content {
+    flex: 1;
+}
+
+.goal-content h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.goal-time {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.goal-time .current-time {
+    font-size: 3rem;
+}
+
+.goal-time .separator {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.goal-time .target-time {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.goal-time .unit {
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
+
+.goal-message {
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    opacity: 0.95;
+}
+
+.goal-message.achieved {
+    font-weight: 600;
+}
+
+/* ============================
+   Progress Bar
+   ============================ */
+.progress-bar-container {
+    margin-top: 1.5rem;
+}
+
+.progress-bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ============================
+   Stats Section
+   ============================ */
+.stats-section {
+    margin-bottom: 3rem;
+}
+
+.stats-section h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.stat-content h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #718096;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.stat-detail {
+    font-size: 0.9rem;
+    color: #a0aec0;
+}
+
+/* ============================
+   Daily Stats Section
+   ============================ */
+.daily-stats-section {
+    margin-bottom: 3rem;
+}
+
+.daily-stats-section h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.chart-header h2 {
+    margin-bottom: 0;
+}
+
+.chart-period-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: #f7fafc;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+}
+
+.period-btn {
+    padding: 0.5rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: #4a5568;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.period-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.period-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.period-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+.daily-stats-chart {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    min-height: 300px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ============================
+   Recent Sessions Section
+   ============================ */
+.recent-sessions-section {
+    margin-bottom: 3rem;
+}
+
+.recent-sessions-section h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+}
+
+.sessions-list {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.session-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+}
+
+.session-item:last-child {
+    border-bottom: none;
+}
+
+.session-item:hover {
+    background-color: #f7fafc;
+}
+
+.session-date {
+    display: flex;
+    flex-direction: column;
+    min-width: 80px;
+}
+
+.session-date .date {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.session-date .time {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.session-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.session-details .duration {
+    font-weight: 600;
+    color: #667eea;
+}
+
+.session-details .chords {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.goal-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.goal-badge.achieved {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.no-sessions {
+    text-align: center;
+    padding: 3rem;
+    color: #718096;
+    font-size: 1.1rem;
+}
+
+/* ============================
+   Responsive Design
+   ============================ */
+@media (max-width: 768px) {
+    .progress-header h1 {
+        font-size: 2rem;
+    }
+
+    .goal-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .goal-time {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .session-item {
+        flex-wrap: wrap;
+    }
+
+    .session-details {
+        flex-basis: 100%;
+        order: 3;
+    }
+}
+
+/* ============================
+   Mobile Support (320px - 767px)
+   ============================ */
+@media (max-width: 767px) {
+    /* コンテナ */
+    .progress-container {
+        padding: 1rem 0.75rem;
+    }
+
+    /* ヘッダー */
+    .progress-header {
+        margin-bottom: 2rem;
+    }
+
+    .progress-header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-header .subtitle {
+        font-size: 1rem;
+    }
+
+    /* 目標セクション - スクロール可能に */
+    .goal-section {
+        margin-bottom: 2rem;
+    }
+
+    .goal-card {
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+
+    .goal-icon {
+        font-size: 3rem;
+    }
+
+    .goal-content h2 {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .goal-time {
+        font-size: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .goal-time .current-time {
+        font-size: 2.5rem;
+    }
+
+    .goal-time .target-time {
+        font-size: 1.8rem;
+    }
+
+    .goal-message {
+        font-size: 1rem;
+    }
+
+    /* プログレスバー */
+    .progress-bar-container {
+        margin-top: 1rem;
+    }
+
+    .progress-bar {
+        height: 10px;
+    }
+
+    /* 統計セクション - シングルカラム */
+    .stats-section {
+        margin-bottom: 2rem;
+    }
+
+    .stats-section h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+    }
+
+    .stat-content h3 {
+        font-size: 0.85rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+    }
+
+    .stat-detail {
+        font-size: 0.85rem;
+    }
+
+    /* 日次統計セクション */
+    .daily-stats-section {
+        margin-bottom: 2rem;
+    }
+
+    .daily-stats-section h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .daily-stats-chart {
+        padding: 1rem;
+        min-height: 250px;
+    }
+
+    /* チャート切り替えボタン - モバイル対応 */
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .chart-period-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .period-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    /* チャートのキャンバスサイズ調整 */
+    #practiceChart {
+        max-height: 250px !important;
+    }
+
+    /* 最近のセッション */
+    .recent-sessions-section {
+        margin-bottom: 2rem;
+    }
+
+    .recent-sessions-section h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .sessions-list {
+        padding: 0.5rem;
+    }
+
+    .session-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .session-date {
+        min-width: 60px;
+    }
+
+    .session-date .date {
+        font-size: 0.9rem;
+    }
+
+    .session-date .time {
+        font-size: 0.8rem;
+    }
+
+    .session-details {
+        font-size: 0.9rem;
+    }
+
+    .session-details .duration {
+        font-size: 1rem;
+    }
+
+    .goal-badge {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.6rem;
+    }
+
+    .no-sessions {
+        padding: 2rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* ============================
+   Small Mobile (320px - 374px)
+   ============================ */
+@media (max-width: 374px) {
+    .progress-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .goal-icon {
+        font-size: 2.5rem;
+    }
+
+    .goal-time {
+        font-size: 1.8rem;
+    }
+
+    .goal-time .current-time {
+        font-size: 2rem;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .daily-stats-chart {
+        min-height: 200px;
+    }
+
+    #practiceChart {
+        max-height: 200px !important;
+    }
+}
+
+/* ============================
+   Animations
+   ============================ */
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

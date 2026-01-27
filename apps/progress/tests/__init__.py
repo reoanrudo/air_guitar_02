@@ -1,0 +1,3 @@
+"""
+Progress app tests package
+"""

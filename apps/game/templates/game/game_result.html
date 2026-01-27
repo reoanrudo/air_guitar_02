@@ -1,0 +1,444 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}結果 | {{ song.name }} | VirtuTune{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <div class="result-header">
+        <div class="evaluation-badge evaluation-{{ evaluation|lower }}">
+            {{ evaluation }}
+        </div>
+        <h1>ゲーム結果</h1>
+        <p class="song-title">{{ song.name }} - {{ song.artist }}</p>
+    </div>
+
+    <div class="result-stats">
+        <div class="stat-card main-score">
+            <span class="stat-label">スコア</span>
+            <span class="stat-value">{{ session.score }}</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">ランク</span>
+            <span class="stat-value">#{{ rank }}</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">最大コンボ</span>
+            <span class="stat-value">{{ session.max_combo }}</span>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-label">精度</span>
+            <span class="stat-value">{{ session.accuracy|floatformat:1 }}%</span>
+        </div>
+    </div>
+
+    <div class="judgement-stats">
+        <h2>判定統計</h2>
+        <div class="judgement-grid">
+            <div class="judgement-item perfect">
+                <span class="judgement-label">PERFECT</span>
+                <span class="judgement-count">{{ session.perfect_count }}</span>
+            </div>
+            <div class="judgement-item great">
+                <span class="judgement-label">GREAT</span>
+                <span class="judgement-count">{{ session.great_count }}</span>
+            </div>
+            <div class="judgement-item good">
+                <span class="judgement-label">GOOD</span>
+                <span class="judgement-count">{{ session.good_count }}</span>
+            </div>
+            <div class="judgement-item miss">
+                <span class="judgement-label">MISS</span>
+                <span class="judgement-count">{{ session.miss_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 実績解除セクション -->
+    <div id="unlocked-achievements-section" style="display: none;">
+        <h2 style="text-align: center; color: #333; margin-bottom: 1.5rem;">
+            🏆 新しい実績を解除！
+        </h2>
+        <div id="unlocked-achievements-list" class="unlocked-achievements-list"></div>
+    </div>
+
+    <div class="result-actions">
+        <a href="{% url 'game:game_play' song.id %}" class="btn btn-primary">
+            もう一度プレイ
+        </a>
+        <a href="{% url 'game:game_list' %}" class="btn btn-secondary">
+            曲選択に戻る
+        </a>
+        <a href="{% url 'guitar:guitar' %}" class="btn btn-secondary">
+            仮想ギターに戻る
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.result-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.evaluation-badge {
+    display: inline-block;
+    font-size: 6rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    animation: evaluationPop 0.6s ease-out;
+}
+
+@keyframes evaluationPop {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.evaluation-s {
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+}
+
+.evaluation-a {
+    color: #667eea;
+    text-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+}
+
+.evaluation-b {
+    color: #28a745;
+    text-shadow: 0 0 30px rgba(40, 167, 69, 0.6);
+}
+
+.evaluation-c {
+    color: #fd7e14;
+    text-shadow: 0 0 30px rgba(253, 126, 20, 0.6);
+}
+
+.evaluation-d {
+    color: #dc3545;
+    text-shadow: 0 0 30px rgba(220, 53, 69, 0.6);
+}
+
+.result-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.song-title {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.result-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem 1rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.main-score {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.main-score .stat-label,
+.stat-card.main-score .stat-value {
+    color: white;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.judgement-stats {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 3rem;
+}
+
+.judgement-stats h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.judgement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.judgement-item {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.judgement-item.perfect {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.judgement-item.great {
+    background: linear-gradient(135deg, #667eea 0%, #8b9fee 100%);
+}
+
+.judgement-item.good {
+    background: linear-gradient(135deg, #28a745 0%, #5cb85c 100%);
+}
+
+.judgement-item.miss {
+    background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);
+}
+
+.judgement-label {
+    display: block;
+    font-size: 0.9rem;
+    color: white;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.judgement-count {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+}
+
+.result-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    padding: 1rem 2rem;
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+@media (max-width: 768px) {
+    .result-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .judgement-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .evaluation-badge {
+        font-size: 4rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+}
+
+/* 実績解除スタイル */
+.unlocked-achievements-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.achievement-unlocked-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: achievementSlideIn 0.5s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes achievementSlideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.achievement-unlocked-icon {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.achievement-unlocked-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.achievement-unlocked-info {
+    flex: 1;
+}
+
+.achievement-unlocked-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+    margin: 0 0 0.25rem 0;
+}
+
+.achievement-unlocked-description {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+.achievement-tier-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: white;
+    white-space: nowrap;
+}
+
+.achievement-tier-badge.tier-1 {
+    background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%);
+}
+
+.achievement-tier-badge.tier-2 {
+    background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+}
+
+.achievement-tier-badge.tier-3 {
+    background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+}
+</style>
+
+<script>
+// ページ読み込み時に解除された実績を表示
+document.addEventListener('DOMContentLoaded', function() {
+    // URLパラメータから実績情報を取得（GameResultViewで設定）
+    const unlockedAchievements = JSON.parse(
+        sessionStorage.getItem('unlocked_achievements') || '[]'
+    );
+
+    if (unlockedAchievements.length > 0) {
+        displayUnlockedAchievements(unlockedAchievements);
+        // セッションストレージをクリア
+        sessionStorage.removeItem('unlocked_achievements');
+    }
+});
+
+function displayUnlockedAchievements(achievements) {
+    const section = document.getElementById('unlocked-achievements-section');
+    const list = document.getElementById('unlocked-achievements-list');
+
+    if (!section || !list) return;
+
+    // 各実績を表示
+    achievements.forEach((achievement, index) => {
+        const card = document.createElement('div');
+        card.className = 'achievement-unlocked-card';
+        card.style.animationDelay = `${index * 0.1}s`;
+
+        card.innerHTML = `
+            <div class="achievement-unlocked-icon">
+                ${achievement.icon_url}
+            </div>
+            <div class="achievement-unlocked-info">
+                <p class="achievement-unlocked-name">${achievement.name}</p>
+                <p class="achievement-unlocked-description">${achievement.description}</p>
+            </div>
+            <div class="achievement-tier-badge tier-${achievement.tier}">
+                ${getTierName(achievement.tier)}
+            </div>
+        `;
+
+        list.appendChild(card);
+    });
+
+    // セクションを表示
+    section.style.display = 'block';
+
+    // スクロールして実績セクションへ
+    setTimeout(() => {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+}
+
+function getTierName(tier) {
+    switch(tier) {
+        case 1:
+            return 'ブロンズ';
+        case 2:
+            return 'シルバー';
+        case 3:
+            return 'ゴールド';
+        default:
+            return '';
+    }
+}
+</script>
+{% endblock %}

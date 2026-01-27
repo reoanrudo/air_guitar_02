@@ -1,0 +1,169 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}仮想ギター | VirtuTune{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/guitar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="guitar-container">
+    <header class="guitar-header">
+        <h1>仮想ギター</h1>
+        <p class="guitar-subtitle">ギターの演奏を楽しみましょう</p>
+    </header>
+
+    <main class="guitar-main">
+        <!-- ギターネック -->
+        <div class="guitar-neck">
+            <div class="fretboard">
+                <!-- フレット（指板） -->
+                <div class="fret fret-0"></div>
+                <div class="fret fret-1"></div>
+                <div class="fret fret-2"></div>
+                <div class="fret fret-3"></div>
+
+                <!-- 6本弦 -->
+                <div class="string" data-string="6" data-note="E2">
+                    <span class="string-label">6弦 (E)</span>
+                </div>
+                <div class="string" data-string="5" data-note="A2">
+                    <span class="string-label">5弦 (A)</span>
+                </div>
+                <div class="string" data-string="4" data-note="D2">
+                    <span class="string-label">4弦 (D)</span>
+                </div>
+                <div class="string" data-string="3" data-note="G1">
+                    <span class="string-label">3弦 (G)</span>
+                </div>
+                <div class="string" data-string="2" data-note="B1">
+                    <span class="string-label">2弦 (B)</span>
+                </div>
+                <div class="string" data-string="1" data-note="e1">
+                    <span class="string-label">1弦 (e)</span>
+                </div>
+            </div>
+
+            <!-- オーディオビジュアライザー -->
+            <canvas id="audio-visualizer"></canvas>
+        </div>
+
+        <!-- コードセレクター -->
+        <div class="chord-selector">
+            <h2>コードを選択</h2>
+            <div class="chord-buttons">
+                {% for chord in chords %}
+                <button class="chord-btn" data-chord="{{ chord.name }}">
+                    {{ chord.name }}
+                </button>
+                {% endfor %}
+            </div>
+            <div class="current-chord">
+                <span>現在のコード: </span>
+                <span id="current-chord-name" class="chord-name">-</span>
+            </div>
+        </div>
+
+        <!-- 練習コントロール -->
+        <div class="practice-controls">
+            <h2>練習セッション</h2>
+            <div class="timer-display">
+                <span class="timer" id="timer">00:00</span>
+            </div>
+            <div class="control-buttons">
+                <button id="start-practice" class="btn btn-primary">練習開始</button>
+                <button id="stop-practice" class="btn btn-secondary" disabled>練習終了</button>
+            </div>
+        </div>
+
+        <!-- カメラジェスチャー認識 -->
+        <div class="camera-gesture">
+            <h2>カメラでストローク</h2>
+            <div class="camera-controls">
+                <button id="enable-camera-btn" class="btn btn-primary">カメラを有効化</button>
+                <button id="disable-camera-btn" class="btn btn-secondary" disabled>カメラを無効化</button>
+            </div>
+            <div class="camera-status">
+                <div id="camera-indicator" class="camera-indicator">
+                    <span class="indicator-dot"></span>
+                    <span class="indicator-text">カメラ: オフ</span>
+                </div>
+            </div>
+            <div class="camera-preview">
+                <video id="camera-video" class="camera-video" playsinline></video>
+            </div>
+            <div class="camera-instructions">
+                <p>カメラの前に手をかざし、下に動かしてストロークしてください</p>
+            </div>
+        </div>
+
+        <!-- モバイルペアリング -->
+        <div class="mobile-pairing">
+            <h2>スマートフォンで操作</h2>
+
+            <!-- IPアドレス表示 -->
+            <div class="ip-address-display" style="background: #f0f0f0; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; color: #667eea;">📱 スマートフォンでアクセス</h3>
+                <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">
+                    以下のURLをスマートフォンのブラウザで入力してください：<br>
+                    <strong style="color: #28a745;">✓ インターネット接続があればどこでもOK</strong>
+                </p>
+                <div id="ip-url-display" style="
+                    background: white;
+                    border: 2px solid #28a745;
+                    border-radius: 8px;
+                    padding: 15px;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #28a745;
+                    margin: 10px 0;
+                    word-break: break-all;
+                    line-height: 1.6;
+                ">
+                    https://yang-deborah-especially-luke.trycloudflare.com/mobile/controller/?session=<span id="session-id-display">...</span>
+                </div>
+                <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">
+                    ※ またはQRコードをスキャンしてください
+                </p>
+            </div>
+
+            <button id="show-qr-btn" class="btn btn-secondary">QRコードを表示</button>
+
+            <div id="qr-modal" class="qr-modal" style="display: none;">
+                <div class="qr-modal-content">
+                    <span class="qr-close">&times;</span>
+                    <h3>QRコードでペアリング</h3>
+                    <div class="qr-code-container">
+                        <img id="qr-code" src="/mobile/qr/" alt="QRコード" />
+                        <p id="pairing-status" class="pairing-status">待機中...</p>
+                    </div>
+                    <div class="pairing-instructions">
+                        <ol>
+                            <li>スマートフォンでこのQRコードをスキャン</li>
+                            <li>表示されたURLにアクセス</li>
+                            <li>ペアリングが完了すると接続されます</li>
+                        </ol>
+                    </div>
+                    <button id="refresh-qr-btn" class="btn btn-secondary">QRコードを更新</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Tone.js for better guitar sounds -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<!-- MediaPipe CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+<script src="{% static 'js/guitar.js' %}"></script>
+<script src="{% static 'js/visualizer.js' %}"></script>
+<script src="{% static 'js/qr-pairing.js' %}"></script>
+<script src="{% static 'js/camera.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,1038 @@
+/**
+ * VirtuTune - Guitar Page Styles
+ *
+ * 仮想ギター画面のスタイルシート
+ */
+
+/* ============================================
+   ベーススタイル
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+/* ============================================
+   ギターコンテナ
+   ============================================ */
+
+.guitar-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.guitar-header {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.guitar-header h1 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.guitar-subtitle {
+    color: #718096;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.guitar-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+/* ============================================
+   ギターネック
+   ============================================ */
+
+.guitar-neck {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.fretboard {
+    position: relative;
+    height: 300px;
+    background: linear-gradient(to bottom, #8B4513, #A0522D);
+    border-radius: 5px;
+    padding: 20px;
+}
+
+/* フレット（指板） */
+.fret {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #333;
+}
+
+.fret-0 { top: 0; }
+.fret-1 { top: 25%; }
+.fret-2 { top: 50%; }
+.fret-3 { top: 75%; }
+
+/* 弦 */
+.string {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #silver;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.string:hover {
+    height: 3px;
+    background: #gold;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.string[data-string="6"] { top: 10%; }
+.string[data-string="5"] { top: 24%; }
+.string[data-string="4"] { top: 38%; }
+.string[data-string="3"] { top: 52%; }
+.string[data-string="2"] { top: 66%; }
+.string[data-string="1"] { top: 80%; }
+
+/* 弦の振動アニメーション */
+@keyframes vibrate {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-3px);
+    }
+    75% {
+        transform: translateY(3px);
+    }
+}
+
+.string.vibrating {
+    animation: vibrate 0.1s linear 3;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+/* 弦のグローエフェクト */
+.string.glowing {
+    box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+    animation: glow-fade 0.5s ease-out;
+}
+
+@keyframes glow-fade {
+    0% {
+        box-shadow: 0 0 40px #00ff00, 0 0 80px #00ff00;
+    }
+    100% {
+        box-shadow: none;
+    }
+}
+
+.string-label {
+    position: absolute;
+    left: -60px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* ============================================
+   コードセレクター
+   ============================================ */
+
+.chord-selector {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chord-selector h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.chord-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.chord-btn {
+    padding: 15px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    font-size: 1.2em;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chord-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.chord-btn.active {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.5);
+}
+
+.current-chord {
+    text-align: center;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.chord-name {
+    display: inline-block;
+    font-size: 2em;
+    font-weight: bold;
+    color: #667eea;
+    margin-left: 10px;
+}
+
+/* ============================================
+   練習コントロール
+   ============================================ */
+
+.practice-controls {
+    grid-column: 1 / -1;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.practice-controls h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.timer-display {
+    margin: 20px 0;
+}
+
+.timer {
+    font-size: 4em;
+    font-weight: bold;
+    color: #333;
+    font-family: 'Courier New', monospace;
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.5);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.5);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   レスポンシブデザイン
+   ============================================ */
+
+@media (max-width: 768px) {
+    .guitar-main {
+        grid-template-columns: 1fr;
+    }
+
+    .chord-buttons {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .timer {
+        font-size: 3em;
+    }
+
+    .control-buttons {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .camera-controls {
+        flex-direction: column;
+    }
+}
+
+/* ============================================
+   モバイル対応 (320px - 767px)
+   ============================================ */
+
+@media (max-width: 767px) {
+    /* ギターコンテナ */
+    .guitar-container {
+        padding: 15px 10px;
+    }
+
+    /* ヘッダー */
+    .guitar-header {
+        padding: 15px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .guitar-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+
+    .guitar-subtitle {
+        font-size: 0.9rem;
+    }
+
+    /* メインレイアウト */
+    .guitar-main {
+        gap: 15px;
+    }
+
+    /* ギターネック - 弦を垂直方向に積み上げ */
+    .guitar-neck {
+        padding: 20px 15px;
+    }
+
+    .fretboard {
+        height: auto;
+        min-height: 400px;
+        padding: 15px;
+    }
+
+    /* 弦を垂直配置 */
+    .string {
+        position: relative;
+        left: auto;
+        right: auto;
+        height: 50px;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #d4af37, #ffd700);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .string:hover {
+        height: 50px;
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    }
+
+    .string[data-string="6"],
+    .string[data-string="5"],
+    .string[data-string="4"],
+    .string[data-string="3"],
+    .string[data-string="2"],
+    .string[data-string="1"] {
+        top: auto;
+    }
+
+    .string-label {
+        position: static;
+        color: #333;
+        font-size: 16px;
+        font-weight: bold;
+        text-shadow: none;
+    }
+
+    /* フレット非表示（モバイルでは不要） */
+    .fret {
+        display: none;
+    }
+
+    /* コードセレクター - 大きなボタン */
+    .chord-selector {
+        padding: 15px;
+    }
+
+    .chord-selector h2 {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+    }
+
+    .chord-buttons {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .chord-btn {
+        padding: 20px 10px;
+        font-size: 1.3rem;
+        min-height: 54px;
+        border-width: 3px;
+    }
+
+    .chord-btn:active {
+        transform: scale(0.95);
+    }
+
+    .current-chord {
+        padding: 12px;
+        margin-top: 12px;
+    }
+
+    .chord-name {
+        font-size: 2.5rem;
+    }
+
+    /* 練習コントロール - 常に表示 */
+    .practice-controls {
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+        border-radius: 15px 15px 0 0;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+        padding: 15px;
+        margin: 0 -10px;
+    }
+
+    .practice-controls h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .timer-display {
+        margin: 15px 0;
+    }
+
+    .timer {
+        font-size: 3.5rem;
+    }
+
+    .control-buttons {
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 18px 24px;
+        font-size: 1.1rem;
+        min-height: 54px;
+        width: 100%;
+    }
+
+    /* カメラセクション */
+    .camera-gesture {
+        padding: 15px;
+    }
+
+    .camera-gesture h2 {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+    }
+
+    .camera-controls {
+        gap: 8px;
+    }
+
+    .camera-controls .btn {
+        padding: 14px 16px;
+        font-size: 0.95rem;
+    }
+
+    .camera-instructions {
+        font-size: 0.85rem;
+    }
+
+    /* モバイルペアリング */
+    .mobile-pairing {
+        padding: 15px;
+    }
+
+    .mobile-pairing h2 {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+    }
+
+    /* ビジュアライザー */
+    #audio-visualizer {
+        height: 150px;
+        margin-top: 15px;
+    }
+
+    /* コンボカウンター */
+    .combo-counter {
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+        padding: 10px 15px;
+    }
+}
+
+/* ============================================
+   スモールモバイル (320px - 374px)
+   ============================================ */
+
+@media (max-width: 374px) {
+    .chord-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chord-btn {
+        font-size: 1.2rem;
+    }
+
+    .timer {
+        font-size: 3rem;
+    }
+
+    .chord-name {
+        font-size: 2rem;
+    }
+}
+
+/* ============================================
+   モバイルペアリング
+   ============================================ */
+
+.mobile-pairing {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-pairing h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+/* QRモーダル */
+.qr-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.qr-modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: slideDown 0.3s;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.qr-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.qr-close:hover,
+.qr-close:focus {
+    color: #000;
+}
+
+.qr-modal-content h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.qr-code-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#qr-code {
+    max-width: 300px;
+    height: auto;
+    border: 2px solid #667eea;
+    border-radius: 10px;
+    padding: 10px;
+    background: white;
+}
+
+.pairing-status {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.pairing-status.waiting {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.pairing-status.paired {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.pairing-status.connected {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.pairing-instructions {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.pairing-instructions ol {
+    margin-left: 20px;
+}
+
+.pairing-instructions li {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+#refresh-qr-btn {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* ============================================
+   ビジュアルフィードバック
+   ============================================ */
+
+/* オーディオビジュアライザーキャンバス */
+#audio-visualizer {
+    width: 100%;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ノートフィードバック */
+.note-feedback {
+    position: fixed;
+    font-size: 2em;
+    font-weight: bold;
+    pointer-events: none;
+    animation: note-feedback-animation 1s ease-out forwards;
+    z-index: 1000;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes note-feedback-animation {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(1);
+    }
+}
+
+.feedback-text {
+    font-size: 1.2em;
+}
+
+.feedback-score {
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+/* コンボカウンター */
+.combo-counter {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 2em;
+    font-weight: bold;
+    color: #667eea;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.combo-animation {
+    animation: combo-pulse 0.3s ease-out;
+}
+
+@keyframes combo-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ============================================
+   カメラジェスチャー認識
+   ============================================ */
+
+.camera-gesture {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.camera-gesture h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.camera-controls .btn {
+    flex: 1;
+    padding: 10px 20px;
+    font-size: 1em;
+}
+
+.camera-status {
+    margin-bottom: 15px;
+}
+
+.camera-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.indicator-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #dc3545;
+    transition: background 0.3s ease;
+}
+
+.camera-indicator.active .indicator-dot {
+    background: #28a745;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.indicator-text {
+    font-weight: bold;
+    color: #333;
+}
+
+.camera-preview {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.camera-video {
+    width: 100%;
+    height: auto;
+    min-height: 240px;
+    border-radius: 5px;
+    background: #000;
+    display: block;
+    object-fit: cover;
+}
+
+/* カメラがオフのときのプレビューエリア */
+.camera-preview {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.camera-preview::before {
+    content: 'カメラプレビュー';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 14px;
+    z-index: 1;
+}
+
+.camera-preview.active .camera-video {
+    min-height: 300px;
+}
+
+.camera-preview.active::before {
+    display: none;
+}
+
+.camera-instructions {
+    padding: 10px;
+    background: #e7f3ff;
+    border-radius: 5px;
+    border-left: 4px solid #667eea;
+}
+
+.camera-instructions p {
+    margin: 0;
+    color: #333;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+/* ギターネックのストロークアニメーション */
+.guitar-neck.strumming {
+    animation: strumFlash 0.2s ease;
+}
+
+@keyframes strumFlash {
+    0%, 100% {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.6);
+    }
+}
+
+/* スコアポップアップ */
+.score-popup {
+    position: fixed;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ffd700;
+    pointer-events: none;
+    animation: score-popup-animation 0.8s ease-out forwards;
+    z-index: 1000;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes score-popup-animation {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(1.5);
+    }
+}
+
+/* 目標達成オーバーレイ */
+.goal-achievement-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: overlay-fade-in 0.5s ease-out;
+}
+
+@keyframes overlay-fade-in {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.goal-achievement-content {
+    text-align: center;
+    color: white;
+    animation: celebration-bounce 0.6s ease-out;
+}
+
+@keyframes celebration-bounce {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.celebration-message {
+    font-size: 4em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    animation: message-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes message-glow {
+    0% {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    100% {
+        text-shadow: 0 0 30px rgba(255, 255, 255, 1);
+    }
+}
+
+.goal-stats {
+    font-size: 2em;
+    margin-top: 10px;
+}
+
+/* 紙吹雪エフェクト */
+.confetti {
+    position: fixed;
+    top: -20px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    animation: confetti-fall linear forwards;
+    z-index: 2001;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* ストリングプレイ時の強調表示 */
+.string.playing {
+    height: 4px;
+    background: #ffd700;
+    box-shadow: 0 0 20px #ffd700;
+}
+
+/* パーフェクトヒットエフェクト */
+.perfect-hit {
+    animation: perfect-flash 0.3s ease-out;
+}
+
+@keyframes perfect-flash {
+    0%, 100% {
+        background: transparent;
+    }
+    50% {
+        background: rgba(255, 215, 0, 0.3);
+    }
+}

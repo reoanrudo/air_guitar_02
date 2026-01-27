@@ -1,0 +1,224 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}リズムゲーム | VirtuTune{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <div class="game-header">
+        <h1>リズムゲームモード</h1>
+        <p>楽曲を選んでプレイしよう！</p>
+    </div>
+
+    {% if songs %}
+    <div class="songs-list">
+        {% for difficulty, songs_in_difficulty in songs_by_difficulty.items %}
+        <div class="difficulty-section">
+            <h2 class="difficulty-title">
+                難易度: {{ difficulty }}
+                {% if difficulty == 1 %}<span class="difficulty-label">初心者向け</span>{% endif %}
+                {% if difficulty == 2 %}<span class="difficulty-label">易しい</span>{% endif %}
+                {% if difficulty == 3 %}<span class="difficulty-label">普通</span>{% endif %}
+                {% if difficulty == 4 %}<span class="difficulty-label">難しい</span>{% endif %}
+                {% if difficulty == 5 %}<span class="difficulty-label">超難しい</span>{% endif %}
+            </h2>
+
+            <div class="songs-grid">
+                {% for song in songs_in_difficulty %}
+                <div class="song-card">
+                    <div class="song-info">
+                        <h3 class="song-name">{{ song.name }}</h3>
+                        <p class="song-artist">{{ song.artist }}</p>
+                        <div class="song-details">
+                            <span class="song-tempo">{{ song.tempo }} BPM</span>
+                            <span class="song-duration">{{ song.duration_seconds }}秒</span>
+                        </div>
+                    </div>
+
+                    <div class="song-stats">
+                        {% if song.id in user_scores %}
+                        <p class="user-best-score">
+                            最高スコア: {{ user_scores|default:0 }}
+                        </p>
+                        {% else %}
+                        <p class="no-score">まだプレイしていません</p>
+                        {% endif %}
+                    </div>
+
+                    <a href="{% url 'game:game_play' song.id %}"
+                       class="btn btn-play">
+                        プレイ
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-songs">
+        <p>プレイ可能な楽曲がありません。</p>
+    </div>
+    {% endif %}
+
+    <div class="game-navigation">
+        <a href="{% url 'guitar:guitar' %}" class="btn btn-secondary">
+            仮想ギターに戻る
+        </a>
+        <a href="{% url 'progress:progress' %}" class="btn btn-secondary">
+            進捗を確認
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.game-header h1 {
+    font-size: 2.5rem;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.game-header p {
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.difficulty-section {
+    margin-bottom: 3rem;
+}
+
+.difficulty-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #667eea;
+}
+
+.difficulty-label {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    margin-left: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.songs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.song-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.song-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.song-info {
+    margin-bottom: 1rem;
+}
+
+.song-name {
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.song-artist {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.song-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.song-stats {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.user-best-score {
+    font-size: 0.9rem;
+    color: #667eea;
+    font-weight: bold;
+    margin: 0;
+}
+
+.no-score {
+    font-size: 0.9rem;
+    color: #999;
+    margin: 0;
+}
+
+.btn-play {
+    display: block;
+    text-align: center;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+.btn-play:hover {
+    opacity: 0.9;
+}
+
+.game-navigation {
+    margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.no-songs {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+}
+</style>
+{% endblock %}

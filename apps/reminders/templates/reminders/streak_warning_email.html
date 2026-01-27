@@ -1,0 +1,176 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirtuTune - ストリーク警告</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #fff5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 5px solid #ff6b6b;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .warning-box {
+            background-color: #fff5f5;
+            border: 2px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .warning-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 10px 0;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .streak-count {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .streak-unit {
+            font-size: 18px;
+            color: #666;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+        .tips {
+            background-color: #f0f7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .tips-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .tips-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .tips-list li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ ストリーク警告</h1>
+        </div>
+
+        <div class="content">
+            <p class="greeting">
+                {{ user.username }}さん、
+            </p>
+
+            <div class="warning-box">
+                <div class="warning-icon">🔥</div>
+                <div class="warning-text">
+                    {{ streak_days }}日間の連続練習記録が途切れます！
+                </div>
+            </div>
+
+            <p class="message" style="text-align: center;">
+                あなたの素晴らしいストリーク記録
+            </p>
+
+            <div class="streak-count">
+                {{ streak_days }}<span class="streak-unit">日</span>
+            </div>
+
+            <p class="message">
+                昨日の練習記録が見つかりませんでした。<br>
+                今日中に練習して、この素晴らしいストリークを維持しましょう！
+            </p>
+
+            <div class="tips">
+                <div class="tips-title">💡 短時間でもOK！</div>
+                <ul class="tips-list">
+                    <li>1日5分から始められます</li>
+                    <li>仮想ギターなら場所を選びません</li>
+                    <li>スマホとPCがあればすぐに練習できます</li>
+                    <li>ゲームモードで楽しく練習しましょう</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="https://virtutune.example.com/guitar/" class="cta-button">
+                    今すぐ練習する
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                このメールはVirtuTuneのストリーク警告機能により送信されました。<br>
+                警告メールを解除する場合は、
+                <a href="https://virtutune.example.com/profile/">プロフィール設定</a>
+                から変更できます。
+            </p>
+            <p>
+                &copy; 2026 VirtuTune. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

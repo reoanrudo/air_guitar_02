@@ -1,0 +1,520 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}実績 | VirtuTune{% endblock %}
+
+{% block content %}
+<div class="achievements-container">
+    <div class="achievements-header">
+        <h1>実績・バッジ</h1>
+        <p class="achievements-subtitle">あなたの達成した実績を確認しましょう</p>
+    </div>
+
+    <!-- 実績進捗 -->
+    <div class="achievements-progress">
+        <div class="progress-header">
+            <h2>実績進捗</h2>
+            <span class="progress-text">{{ progress.unlocked }} / {{ progress.total }}</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ progress.percentage }}%"></div>
+            </div>
+            <span class="progress-percentage">{{ progress.percentage }}%</span>
+        </div>
+    </div>
+
+    <!-- 実績リスト -->
+    <div class="achievements-list">
+        {% if user_achievements %}
+            {% for user_achievement in user_achievements %}
+            <div class="achievement-card unlocked" data-tier="{{ user_achievement.achievement.tier }}">
+                <div class="achievement-icon">
+                    {{ user_achievement.achievement.icon_url|safe }}
+                </div>
+                <div class="achievement-info">
+                    <h3 class="achievement-name">{{ user_achievement.achievement.name }}</h3>
+                    <p class="achievement-description">{{ user_achievement.achievement.description }}</p>
+                    <p class="achievement-unlocked-at">
+                        <i class="icon-calendar"></i>
+                        {{ user_achievement.unlocked_at|date:"Y年m月d日 H:i" }}
+                    </p>
+                </div>
+                <div class="achievement-tier-badge tier-{{ user_achievement.achievement.tier }}">
+                    {% if user_achievement.achievement.tier == 1 %}
+                        ブロンズ
+                    {% elif user_achievement.achievement.tier == 2 %}
+                        シルバー
+                    {% else %}
+                        ゴールド
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-achievements">
+                <p class="no-achievements-text">
+                    まだ実績を解除していません。<br>
+                    ゲームをプレイして実績を解除しましょう！
+                </p>
+                <a href="{% url 'game:game_list' %}" class="btn btn-primary">ゲームをプレイ</a>
+            </div>
+        {% endif %}
+
+        <!-- 未解除の実績 -->
+        {% if locked_achievements %}
+            <div class="achievements-section locked">
+                <h2 class="section-title">未解除の実績</h2>
+                {% for achievement in locked_achievements %}
+                <div class="achievement-card locked" data-tier="{{ achievement.tier }}">
+                    <div class="achievement-icon">
+                        {{ achievement.icon_url|safe }}
+                    </div>
+                    <div class="achievement-info">
+                        <h3 class="achievement-name">{{ achievement.name }}</h3>
+                        <p class="achievement-description">{{ achievement.description }}</p>
+                    </div>
+                    <div class="achievement-tier-badge tier-{{ achievement.tier }}">
+                        {% if achievement.tier == 1 %}
+                            ブロンズ
+                        {% elif achievement.tier == 2 %}
+                            シルバー
+                        {% else %}
+                            ゴールド
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 実績解除通知モーダル -->
+<div id="achievement-notification" class="achievement-notification hidden">
+    <div class="notification-content">
+        <div class="notification-icon">
+            <span class="trophy-icon">🏆</span>
+        </div>
+        <h2 class="notification-title">実績解除！</h2>
+        <div class="notification-achievement">
+            <div class="notification-achievement-icon" id="notification-achievement-icon"></div>
+            <p class="notification-achievement-name" id="notification-achievement-name"></p>
+            <p class="notification-achievement-description" id="notification-achievement-description"></p>
+        </div>
+        <button class="btn btn-primary notification-close">閉じる</button>
+    </div>
+</div>
+
+<style>
+/* ============================================
+   実績ページスタイル
+   ============================================ */
+
+.achievements-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.achievements-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.achievements-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.achievements-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+}
+
+/* 進捗セクション */
+.achievements-progress {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.progress-header h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0;
+}
+
+.progress-text {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.progress-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 24px;
+    background: #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.6s ease;
+}
+
+.progress-percentage {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #667eea;
+    min-width: 60px;
+    text-align: right;
+}
+
+/* 実績リスト */
+.achievements-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.achievements-section.locked {
+    margin-top: 3rem;
+}
+
+.section-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #667eea;
+}
+
+/* 実績カード */
+.achievement-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.achievement-card.unlocked {
+    border-left: 4px solid #667eea;
+}
+
+.achievement-card.locked {
+    opacity: 0.6;
+    border-left: 4px solid #ccc;
+}
+
+.achievement-card.locked:hover {
+    opacity: 0.8;
+}
+
+/* 実績アイコン */
+.achievement-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.achievement-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* 実績情報 */
+.achievement-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.achievement-name {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+    font-weight: bold;
+}
+
+.achievement-description {
+    font-size: 1rem;
+    color: #666;
+    margin: 0 0 0.5rem 0;
+}
+
+.achievement-unlocked-at {
+    font-size: 0.9rem;
+    color: #999;
+    margin: 0;
+}
+
+/* ティアバッジ */
+.achievement-tier-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    align-self: flex-start;
+    white-space: nowrap;
+}
+
+.tier-1 {
+    background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%);
+    color: white;
+}
+
+.tier-2 {
+    background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+    color: white;
+}
+
+.tier-3 {
+    background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+    color: white;
+}
+
+/* 未解除時 */
+.achievement-card.locked .achievement-icon {
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+/* 実績なし */
+.no-achievements {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.no-achievements-text {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+/* 実績解除通知モーダル */
+.achievement-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+.achievement-notification.hidden {
+    display: none;
+}
+
+.notification-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    animation: slideUp 0.4s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.notification-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 0.6s ease infinite alternate;
+}
+
+.trophy-icon {
+    display: inline-block;
+}
+
+.notification-title {
+    font-size: 2rem;
+    color: #ffd700;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.notification-achievement {
+    margin-bottom: 2rem;
+}
+
+.notification-achievement-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1rem;
+}
+
+.notification-achievement-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.notification-achievement-name {
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.notification-achievement-description {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+}
+
+.notification-close {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notification-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-10px);
+    }
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    .achievements-container {
+        padding: 1rem;
+    }
+
+    .achievements-header h1 {
+        font-size: 2rem;
+    }
+
+    .achievement-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .achievement-tier-badge {
+        align-self: center;
+    }
+
+    .achievement-icon {
+        margin: 0 auto;
+    }
+}
+</style>
+
+<script>
+// 実績解除通知を表示する関数
+function showAchievementNotification(achievement) {
+    const modal = document.getElementById('achievement-notification');
+    const iconContainer = document.getElementById('notification-achievement-icon');
+    const nameElement = document.getElementById('notification-achievement-name');
+    const descriptionElement = document.getElementById('notification-achievement-description');
+
+    // 実績情報を設定
+    iconContainer.innerHTML = achievement.icon_url;
+    nameElement.textContent = achievement.name;
+    descriptionElement.textContent = achievement.description;
+
+    // モーダルを表示
+    modal.classList.remove('hidden');
+
+    // 閉じるボタンのイベントリスナー
+    const closeBtn = modal.querySelector('.notification-close');
+    closeBtn.onclick = function() {
+        modal.classList.add('hidden');
+    };
+
+    // 5秒後に自動的に閉じる
+    setTimeout(function() {
+        modal.classList.add('hidden');
+    }, 5000);
+}
+
+// サーバーから新しい実績のリストを受け取って通知を表示する
+function showNewAchievements(achievementNames) {
+    achievementNames.forEach(function(achievementName) {
+        // サーバーから実績データを取得（非同期）
+        fetch('/achievements/api/detail/' + achievementName + '/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAchievementNotification(data.achievement);
+                }
+            })
+            .catch(error => console.error('実績データの取得に失敗しました:', error));
+    });
+}
+</script>
+{% endblock %}

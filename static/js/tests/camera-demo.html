@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カメラジェスチャー認識デモ | VirtuTune</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .camera-status {
+            margin-bottom: 20px;
+        }
+
+        .camera-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            transition: background 0.3s ease;
+        }
+
+        .camera-indicator.active .indicator-dot {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .indicator-text {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .camera-preview {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .camera-video {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            background: #000;
+            display: none;
+        }
+
+        .camera-video[src] {
+            display: block;
+        }
+
+        .camera-instructions {
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .camera-instructions p {
+            margin: 0;
+            color: #333;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .strum-log {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .strum-log h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.9em;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>カメラジェスチャー認識デモ</h1>
+
+        <div class="camera-controls">
+            <button id="enable-camera-btn" class="btn btn-primary">カメラを有効化</button>
+            <button id="disable-camera-btn" class="btn btn-secondary" disabled>カメラを無効化</button>
+        </div>
+
+        <div class="camera-status">
+            <div id="camera-indicator" class="camera-indicator">
+                <span class="indicator-dot"></span>
+                <span class="indicator-text">カメラ: オフ</span>
+            </div>
+        </div>
+
+        <div class="camera-preview">
+            <video id="camera-video" class="camera-video" playsinline></video>
+        </div>
+
+        <div class="camera-instructions">
+            <p><strong>使い方:</strong> カメラの前に手をかざし、下に動かしてストロークしてください。ストロークを検出するとログに記録されます。</p>
+        </div>
+
+        <div class="strum-log">
+            <h3>ストロークログ</h3>
+            <div id="log-entries">
+                <p style="color: #6c757d; font-style: italic;">まだストロークが検出されていません...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MediaPipe CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Camera.js -->
+    <script src="../camera.js"></script>
+
+    <!-- Demo-specific JavaScript -->
+    <script>
+        // ストロークログの管理
+        const logEntries = document.getElementById('log-entries');
+        let strumCount = 0;
+
+        window.addEventListener('strum', function(event) {
+            const velocity = event.detail.velocity;
+            strumCount++;
+
+            // 最初のストロークでプレースホルダーをクリア
+            if (strumCount === 1) {
+                logEntries.innerHTML = '';
+            }
+
+            // ログエントリーを追加
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<strong>ストローク #${strumCount}</strong> - Velocity: ${velocity.toFixed(3)}`;
+            logEntries.insertBefore(entry, logEntries.firstChild);
+
+            // 最大10件を保持
+            while (logEntries.children.length > 10) {
+                logEntries.removeChild(logEntries.lastChild);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ song.name }} | リズムゲーム | VirtuTune{% endblock %}
+
+{% block content %}
+<div class="game-play-container">
+    <div class="game-header">
+        <h1>{{ song.name }}</h1>
+        <p class="song-artist">{{ song.artist }}</p>
+        <div class="song-meta">
+            <span class="difficulty">難易度: {{ song.difficulty }}</span>
+            <span class="tempo">{{ song.tempo }} BPM</span>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <!-- スコア表示 -->
+        <div class="score-board">
+            <div class="score-item">
+                <span class="label">スコア</span>
+                <span class="value" id="score">0</span>
+            </div>
+            <div class="score-item">
+                <span class="label">コンボ</span>
+                <span class="value" id="combo">0</span>
+            </div>
+            <div class="score-item">
+                <span class="label">精度</span>
+                <span class="value" id="accuracy">0%</span>
+            </div>
+        </div>
+
+        <!-- ゲームキャンバス -->
+        <div class="game-canvas-container">
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+        </div>
+
+        <!-- 判定ライン -->
+        <div class="judgement-line">
+            <span class="judgement-label">判定ライン</span>
+        </div>
+
+        <!-- 判定表示 -->
+        <div class="judgement-display" id="judgement"></div>
+
+        <!-- コントロール -->
+        <div class="game-controls">
+            <button id="startButton" class="btn btn-start">スタート</button>
+            <button id="stopButton" class="btn btn-stop" style="display: none;">ストップ</button>
+            <a href="{% url 'game:game_list' %}" class="btn btn-secondary">曲選択に戻る</a>
+        </div>
+    </div>
+
+    <!-- 操作説明 -->
+    <div class="instructions">
+        <h3>操作方法</h3>
+        <ul>
+            <li>音符が判定ラインに来たら、対応するコードを押してください</li>
+            <li>タイミングに合わせて押すと高得点です</li>
+            <li>Perfect: ±50ms、Great: ±100ms、Good: ±150ms</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 楽曲データ
+const songData = {
+    id: {{ song.id }},
+    name: '{{ song.name|escapejs }}',
+    artist: '{{ song.artist|escapejs }}',
+    tempo: {{ song.tempo }},
+    notes: {{ notes_json|safe }}
+};
+</script>
+<script src="{% static 'js/game.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.game-play-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.game-header h1 {
+    font-size: 2.5rem;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.song-artist {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.song-meta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.song-meta span {
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    font-weight: bold;
+}
+
+.game-area {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.score-board {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.score-item {
+    text-align: center;
+}
+
+.score-item .label {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.score-item .value {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.game-canvas-container {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+    border: 2px solid #dee2e6;
+}
+
+.judgement-line {
+    position: relative;
+    height: 4px;
+    background: #667eea;
+    margin: 1rem 0;
+    border-radius: 2px;
+}
+
+.judgement-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: #667eea;
+    font-weight: bold;
+}
+
+.judgement-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.judgement-display.show {
+    opacity: 1;
+    animation: judgementPop 0.5s ease-out;
+}
+
+@keyframes judgementPop {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.judgement-display.perfect {
+    color: #ffd700;
+}
+
+.judgement-display.great {
+    color: #667eea;
+}
+
+.judgement-display.good {
+    color: #28a745;
+}
+
+.judgement-display.miss {
+    color: #dc3545;
+}
+
+.game-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-start {
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-start:hover {
+    opacity: 0.9;
+}
+
+.btn-stop {
+    padding: 1rem 3rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-stop:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    padding: 1rem 2rem;
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.instructions {
+    background: #f8f9fa;
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.instructions h3 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.instructions ul {
+    list-style: none;
+    padding: 0;
+}
+
+.instructions li {
+    padding: 0.5rem 0;
+    color: #666;
+}
+
+.instructions li:before {
+    content: "• ";
+    color: #667eea;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+</style>
+{% endblock %}

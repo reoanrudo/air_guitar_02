@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}VirtuTune - 仮想ギターで楽しく練習{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navigation.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <span class="navbar-brand-icon">🎸</span>
+                VirtuTune
+            </a>
+
+            <!-- デスクトップメニュー -->
+            <ul class="navbar-menu">
+                <li class="navbar-item">
+                    <a href="/" class="navbar-link">
+                        <span class="navbar-link-icon">🏠</span>
+                        ホーム
+                    </a>
+                </li>
+                <li class="navbar-item">
+                    <a href="/guitar/" class="navbar-link">
+                        <span class="navbar-link-icon">🎸</span>
+                        仮想ギター
+                    </a>
+                </li>
+                <li class="navbar-item">
+                    <a href="/progress/" class="navbar-link">
+                        <span class="navbar-link-icon">📊</span>
+                        進捗
+                    </a>
+                </li>
+                <li class="navbar-item">
+                    <a href="/users/profile/" class="navbar-link">
+                        <span class="navbar-link-icon">👤</span>
+                        プロフィール
+                    </a>
+                </li>
+                <li class="navbar-item">
+                    <a href="/users/logout/" class="navbar-link">
+                        <span class="navbar-link-icon">🚪</span>
+                        ログアウト
+                    </a>
+                </li>
+            </ul>
+
+            <!-- ハンバーガーメニューボタン -->
+            <button class="navbar-toggle" aria-label="メニューを開く" aria-expanded="false">
+                <span class="navbar-toggle-line"></span>
+                <span class="navbar-toggle-line"></span>
+                <span class="navbar-toggle-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- モバイルメニュー -->
+    <div class="navbar-mobile-menu">
+        <ul class="navbar-menu">
+            <li class="navbar-item">
+                <a href="/" class="navbar-link">
+                    <span class="navbar-link-icon">🏠</span>
+                    ホーム
+                </a>
+            </li>
+            <li class="navbar-item">
+                <a href="/guitar/" class="navbar-link">
+                    <span class="navbar-link-icon">🎸</span>
+                    仮想ギター
+                </a>
+            </li>
+            <li class="navbar-item">
+                <a href="/progress/" class="navbar-link">
+                    <span class="navbar-link-icon">📊</span>
+                    進捗
+                </a>
+            </li>
+            <li class="navbar-item">
+                <a href="/users/profile/" class="navbar-link">
+                    <span class="navbar-link-icon">👤</span>
+                    プロフィール
+                </a>
+            </li>
+            <li class="navbar-item">
+                <a href="/users/logout/" class="navbar-link">
+                    <span class="navbar-link-icon">🚪</span>
+                    ログアウト
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- オーバーレイ -->
+    <div class="navbar-overlay"></div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/navigation.js' %}"></script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

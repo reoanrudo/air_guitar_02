@@ -1,0 +1,225 @@
+{% extends "users/base.html" %}
+
+{% block title %}プロフィール編集 - VirtuTune{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .profile-header h2 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .profile-header p {
+        color: #999;
+        font-size: 14px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .checkbox-group label {
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+    }
+
+    .errorlist li {
+        color: #e74c3c;
+        font-size: 13px;
+        background: #f8d7da;
+        padding: 8px 12px;
+        border-radius: 5px;
+        border: 1px solid #f5c6cb;
+    }
+
+    .helptext {
+        color: #999;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 14px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="profile-header">
+        <h2>プロフィール編集</h2>
+        <p>ユーザー情報と設定を更新してください</p>
+    </div>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">ユーザー名</label>
+            <input
+                type="text"
+                name="username"
+                value="{{ form.username.value|default:user.username }}"
+                class="form-control"
+                id="{{ form.username.id_for_label }}"
+                required
+            >
+            {% if form.username.errors %}
+                <ul class="errorlist">
+                    {% for error in form.username.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.daily_goal_minutes.id_for_label }}">目標練習時間（分/日）</label>
+            <input
+                type="number"
+                name="daily_goal_minutes"
+                value="{{ form.daily_goal_minutes.value|default:user.daily_goal_minutes }}"
+                class="form-control"
+                id="{{ form.daily_goal_minutes.id_for_label }}"
+                min="1"
+                max="1440"
+                required
+            >
+            <small class="helptext">1日あたりの目標練習時間を分単位で設定してください（1〜1440分）</small>
+            {% if form.daily_goal_minutes.errors %}
+                <ul class="errorlist">
+                    {% for error in form.daily_goal_minutes.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="checkbox-group">
+            <input
+                type="checkbox"
+                name="reminder_enabled"
+                id="{{ form.reminder_enabled.id_for_label }}"
+                {% if form.reminder_enabled.value|default:user.reminder_enabled %}checked{% endif %}
+            >
+            <label for="{{ form.reminder_enabled.id_for_label }}">リマインダーを有効にする</label>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.reminder_time.id_for_label }}">リマインダー時刻</label>
+            <input
+                type="time"
+                name="reminder_time"
+                value="{% if form.reminder_time.value %}{{ form.reminder_time.value }}{% elif user.reminder_time %}{{ user.reminder_time|time:'H:i' }}{% endif %}"
+                class="form-control"
+                id="{{ form.reminder_time.id_for_label }}"
+            >
+            <small class="helptext">練習リマインダーを送信する時刻を設定してください</small>
+            {% if form.reminder_time.errors %}
+                <ul class="errorlist">
+                    {% for error in form.reminder_time.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">更新する</button>
+            <a href="{% url 'users:profile' %}" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

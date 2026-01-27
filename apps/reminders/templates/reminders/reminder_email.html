@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirtuTune - 練習リマインダー</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .stats {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .stat-label {
+            color: #666;
+        }
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+        .streak-badge {
+            display: inline-block;
+            background-color: #ff6b6b;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎸 VirtuTune</h1>
+        </div>
+
+        <div class="content">
+            <p class="greeting">
+                {{ user.username }}さん、こんにちは！
+            </p>
+
+            <p class="message">
+                今日の練習まだですか？<br>
+                継続は力なり！毎日少しずつ練習することで、確実に上達していきます。
+            </p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">目標練習時間</span>
+                    <span class="stat-value">{{ daily_goal_minutes }}分</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">連続練習日数</span>
+                    <span class="stat-value">
+                        {{ streak_days }}日
+                        {% if streak_days >= 7 %}
+                        <span class="streak-badge">🔥 素晴らしい！</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <p class="message">
+                今日も{{ daily_goal_minutes }}分間、VirtuTuneでギターを楽しみましょう！
+            </p>
+
+            <div style="text-align: center;">
+                <a href="https://virtutune.example.com/guitar/" class="cta-button">
+                    練習を始める
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                このメールはVirtuTuneの練習リマインダー機能により送信されました。<br>
+                リマインダーを解除する場合は、
+                <a href="https://virtutune.example.com/profile/">プロフィール設定</a>
+                から変更できます。
+            </p>
+            <p>
+                &copy; 2026 VirtuTune. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

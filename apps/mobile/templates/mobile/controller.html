@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>モバイルコントローラー | VirtuTune</title>
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    <style>
+        /* 指板図のスタイル */
+        .fretboard-diagram {
+            background: linear-gradient(to bottom, #8B4513, #A0522D);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .fretboard-diagram h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .diagram-strings {
+            position: relative;
+        }
+
+        .diagram-string {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .string-label {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 12px;
+            width: 30px;
+        }
+
+        .diagram-frets {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .diagram-fret {
+            flex: 1;
+            border-left: 2px solid #333;
+            border-right: 1px solid #555;
+            height: 40px;
+            position: relative;
+        }
+
+        .finger-dot {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 215, 0, 0.9);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .finger-dot.bass {
+            background: rgba(255, 100, 100, 0.9);
+        }
+
+        /* カメラプレビュー */
+        .camera-preview-section {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .camera-preview-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .camera-preview-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 75%; /* 4:3 アスペクト比 */
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #camera-feed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* アクティビティインジケーター */
+        .activity-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .activity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .activity-dot.active {
+            background: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+
+        .activity-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* タップ時のフィードバック */
+        .chord-btn.tapped {
+            animation: tapFeedback 0.3s ease;
+        }
+
+        @keyframes tapFeedback {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); background: #5568d3; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="controller-container">
+        <header class="controller-header">
+            <h1>VirtuTune コントローラー</h1>
+            <p class="subtitle">左手でコードを選択</p>
+            <div class="activity-indicator">
+                <div id="activity-dot" class="activity-dot"></div>
+                <span id="activity-text" class="activity-text">未接続</span>
+            </div>
+        </header>
+
+        <!-- 接続ステータス -->
+        <section class="connection-status">
+            <div class="status-indicator">
+                <div id="status-dot" class="status-dot"></div>
+                <span id="status-text" class="status-text">未接続</span>
+            </div>
+            <div id="connection-message" class="message info">
+                PCで表示されたQRコードをスキャンしてください
+            </div>
+        </section>
+
+        <!-- カメラプレビュー -->
+        <section class="camera-preview-section">
+            <h3>📸 PCカメラ映像</h3>
+            <div class="camera-preview-container">
+                <canvas id="camera-feed"></canvas>
+                <div class="camera-placeholder">
+                    <div>📷</div>
+                    <div>カメラ待機中...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ペアリングセクション -->
+        <section class="pairing-section" id="pairing-section">
+            <h2>ペアリング</h2>
+            <div class="input-group">
+                <label for="session-id">セッションID</label>
+                <input
+                    type="text"
+                    id="session-id"
+                    placeholder="セッションIDを入力"
+                    autocomplete="off"
+                    value="{{ session_id }}"
+                />
+            </div>
+            <button id="connect-btn" class="btn btn-primary">接続</button>
+        </section>
+
+        <!-- 練習コントロールセクション -->
+        <section class="practice-section" id="practice-section">
+            <h2>練習コントロール</h2>
+            <div class="practice-info">
+                <div class="practice-timer">
+                    <span id="timer-display">00:00</span>
+                </div>
+                <div class="practice-status">
+                    <span id="practice-status-text">練習未開始</span>
+                </div>
+            </div>
+            <div class="practice-buttons">
+                <button id="start-practice-btn" class="btn btn-practice btn-start">
+                    練習開始
+                </button>
+                <button id="stop-practice-btn" class="btn btn-practice btn-stop" disabled>
+                    練習終了
+                </button>
+            </div>
+        </section>
+
+        <!-- コードセクション -->
+        <section class="chord-section" id="chord-section">
+            <h2>コードを選択</h2>
+            <p class="section-hint">タップしてコードを変更</p>
+
+            <!-- 指板図 -->
+            <div class="fretboard-diagram" id="fretboard-diagram">
+                <h3>🎸 指板図 - 現在のコード: <span id="diagram-chord-name">-</span></h3>
+                <div class="diagram-strings" id="diagram-strings">
+                    <!-- JavaScriptで動的に生成 -->
+                </div>
+            </div>
+
+            <div class="chord-grid">
+                <button class="chord-btn" data-chord="C">
+                    <span class="chord-name">C</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+                <button class="chord-btn" data-chord="G">
+                    <span class="chord-name">G</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+                <button class="chord-btn" data-chord="Am">
+                    <span class="chord-name">Am</span>
+                    <span class="chord-hint">マイナー</span>
+                </button>
+                <button class="chord-btn" data-chord="F">
+                    <span class="chord-name">F</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+                <button class="chord-btn" data-chord="D">
+                    <span class="chord-name">D</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+                <button class="chord-btn" data-chord="E">
+                    <span class="chord-name">E</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+                <button class="chord-btn" data-chord="Em">
+                    <span class="chord-name">Em</span>
+                    <span class="chord-hint">マイナー</span>
+                </button>
+                <button class="chord-btn" data-chord="A">
+                    <span class="chord-name">A</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+            </div>
+            <div class="current-chord">
+                <span class="current-chord-label">現在のコード:</span>
+                <span id="current-chord-display" class="current-chord-name">-</span>
+            </div>
+        </section>
+    </div>
+
+    <script src="{% static 'js/mobile-controller-polling.js' %}"></script>
+</body>
+</html>

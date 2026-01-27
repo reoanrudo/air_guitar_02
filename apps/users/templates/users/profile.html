@@ -1,0 +1,206 @@
+{% extends "users/base.html" %}
+
+{% block title %}プロフィール - VirtuTune{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .profile-header h2 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .profile-header p {
+        color: #999;
+        font-size: 14px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        color: white;
+    }
+
+    .stat-card .label {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+
+    .stat-card .value {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .stat-card .unit {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .info-section {
+        margin-bottom: 25px;
+    }
+
+    .info-section h3 {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .info-value {
+        color: #333;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+    }
+
+    .empty-stats {
+        color: #999;
+        font-size: 14px;
+        text-align: center;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-header">
+        <h2>{{ user.username }}さん</h2>
+        <p>{{ user.email }}</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">連続練習日数</div>
+            <div class="value">{{ streak_days }}</div>
+            <div class="unit">日</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">総練習時間</div>
+            <div class="value">{{ total_practice_hours }}</div>
+            <div class="unit">時間</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">目標時間</div>
+            <div class="value">{{ user.daily_goal_minutes }}</div>
+            <div class="unit">分/日</div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h3>設定情報</h3>
+        <div class="info-row">
+            <span class="info-label">ユーザー名</span>
+            <span class="info-value">{{ user.username }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">メールアドレス</span>
+            <span class="info-value">{{ user.email }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">目標練習時間</span>
+            <span class="info-value">{{ user.daily_goal_minutes }} 分/日</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">リマインダー</span>
+            <span class="info-value">
+                {% if user.reminder_enabled %}
+                    有効 ({{ user.reminder_time|default:"未設定" }})
+                {% else %}
+                    無効
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">最終練習日</span>
+            <span class="info-value">
+                {% if last_practice_date %}
+                    {{ last_practice_date|date:"Y年m月d日" }}
+                {% else %}
+                    まだ練習していません
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'users:profile_update' %}" class="btn btn-primary">プロフィールを編集</a>
+        <a href="{% url 'users:account_delete' %}" class="btn btn-danger">アカウントを削除</a>
+    </div>
+</div>
+{% endblock %}

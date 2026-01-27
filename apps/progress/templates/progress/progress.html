@@ -1,0 +1,144 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}進捗状況 | VirtuTune{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/progress.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="progress-container">
+    <div class="progress-header">
+        <h1>あなたの進捗</h1>
+        <p class="subtitle">練習の成果を確認しましょう</p>
+    </div>
+
+    <!-- 目標達成セクション -->
+    <div id="goal-section" class="goal-section">
+        <div class="goal-card">
+            <div class="goal-icon">
+                {% if total_stats.goal_achieved %}
+                    <span class="icon-achieved">🎉</span>
+                {% else %}
+                    <span class="icon-pending">🎯</span>
+                {% endif %}
+            </div>
+            <div class="goal-content">
+                <h2 id="goal-title">{% if total_stats.goal_achieved %}目標達成！{% else %}今日の目標{% endif %}</h2>
+                <div class="goal-time">
+                    <span class="current-time">{{ total_stats.today_minutes }}</span>
+                    <span class="separator">/</span>
+                    <span class="target-time">{{ total_stats.goal_minutes }}</span>
+                    <span class="unit">分</span>
+                </div>
+                {% if total_stats.goal_achieved %}
+                    <p class="goal-message achieved">素晴らしい！目標を達成しました！</p>
+                {% else %}
+                    <p class="goal-message pending" id="goal-message">
+                        あと{{ total_stats.goal_minutes|add:total_stats.today_minutes }}分で目標達成！
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- プログレスバー -->
+        <div class="progress-bar-container">
+            <div class="progress-bar-label">
+                <span>進捗</span>
+                <span id="progress-percentage">{% widthratio total_stats.today_minutes 1 total_stats.goal_minutes %}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progress-bar-fill" style="width: {% widthratio total_stats.today_minutes total_stats.goal_minutes 100 %}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 統計セクション -->
+    <div class="stats-section">
+        <h2>練習統計</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3>総練習時間</h3>
+                    <p class="stat-value">{{ total_stats.total_hours }}時間</p>
+                    <p class="stat-detail">{{ total_stats.total_minutes }}分</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-content">
+                    <h3>連続練習日数</h3>
+                    <p class="stat-value">{{ total_stats.streak_days }}日</p>
+                    <p class="stat-detail">ストリーク</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-content">
+                    <h3>今日の練習</h3>
+                    <p class="stat-value">{{ total_stats.today_minutes }}分</p>
+                    <p class="stat-detail">完了済み</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日次統計セクション -->
+    <div class="daily-stats-section">
+        <div class="chart-header">
+            <h2>練習記録グラフ</h2>
+            <div class="chart-period-toggle">
+                <button class="period-btn active" data-period="7">7日間</button>
+                <button class="period-btn" data-period="30">30日間</button>
+            </div>
+        </div>
+        <div class="daily-stats-chart">
+            <canvas id="practiceChart"></canvas>
+        </div>
+        {% if not daily_stats and not monthly_stats %}
+        <p class="no-sessions">まだ練習記録がありません。今日から始めましょう！</p>
+        {% endif %}
+    </div>
+
+    <!-- 最近の練習セッション -->
+    <div class="recent-sessions-section">
+        <h2>最近の練習</h2>
+        <div class="sessions-list" id="sessions-list">
+            {% if recent_sessions %}
+                {% for session in recent_sessions %}
+                <div class="session-item">
+                    <div class="session-date">
+                        <span class="date">{{ session.started_at|date:"m/d" }}</span>
+                        <span class="time">{{ session.started_at|time:"H:i" }}</span>
+                    </div>
+                    <div class="session-details">
+                        <span class="duration">{{ session.duration_minutes }}分</span>
+                        <span class="chords">{{ session.chords_practiced|join:", " }}</span>
+                    </div>
+                    {% if session.goal_achieved %}
+                        <span class="goal-badge achieved">目標達成</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-sessions">まだ練習記録がありません。今日から始めましょう！</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 統計データをJavaScriptに渡す
+const dailyStats = {{ daily_stats_json|safe }};
+const monthlyStats = {{ monthly_stats_json|safe }};
+const totalStats = {{ total_stats_json|safe }};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/progress.js' %}"></script>
+{% endblock %}

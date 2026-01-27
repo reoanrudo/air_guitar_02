@@ -1,0 +1,120 @@
+{% extends 'core/base.html' %}
+
+{% block title %}VirtuTune - 仮想ギターで楽しく練習{% endblock %}
+
+{% block content %}
+<!-- ヒーローセクション -->
+<section class="hero">
+    <div class="hero__container">
+        <h1 class="hero__title">VirtuTune</h1>
+        <p class="hero__tagline">仮想ギターで楽しく練習</p>
+        <p class="hero__description">
+            楽器を持っていなくても、ブラウザでギター体験。<br>
+            練習時間を記録して、継続的な成長を実感しましょう。
+        </p>
+        <div class="hero__cta">
+            <a href="{% url 'users:signup' %}" class="btn btn--primary">新規登録</a>
+            <a href="{% url 'users:login' %}" class="btn btn--secondary">ログイン</a>
+        </div>
+    </div>
+</section>
+
+<!-- サービス概要セクション -->
+<section class="features">
+    <div class="features__container">
+        <h2 class="features__title">VirtuTuneの特徴</h2>
+
+        <!-- 仮想ギター -->
+        <div class="feature-card">
+            <div class="feature-card__icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+            </div>
+            <h3 class="feature-card__title">仮想ギター</h3>
+            <p class="feature-card__description">
+                ブラウザ上でリアルなギター体験。基本コードを押さえて、弦を弾く感覚を楽しめます。
+                楽器を買わずに、まずは気軽に始めてみましょう。
+            </p>
+        </div>
+
+        <!-- 練習記録 -->
+        <div class="feature-card">
+            <div class="feature-card__icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <h3 class="feature-card__title">練習記録</h3>
+            <p class="feature-card__description">
+                ワンクリックで練習時間を記録。何を練習したか、どれくらい続けているかを自動的に追跡します。
+                「今日どれくらい練習したっけ？」という手間を省きます。
+            </p>
+        </div>
+
+        <!-- 進捗表示 -->
+        <div class="feature-card">
+            <div class="feature-card__icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+            </div>
+            <h3 class="feature-card__title">進捗表示</h3>
+            <p class="feature-card__description">
+                グラフで成長を可視化。練習時間の推移や連続練習日数（ストリーク）を一目で確認できます。
+                小さな成功を積み重ねて、モチベーションを維持しましょう。
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- 対象ペルソナセクション -->
+<section class="personas">
+    <div class="personas__container">
+        <h2 class="personas__title">こんな人におすすめ</h2>
+
+        <div class="persona-card">
+            <h3 class="persona-card__title">ギター初心者</h3>
+            <p class="persona-card__description">
+                「ギターを始めたいけど、楽器を買うのは敷居が高い」という人に。
+                まずは仮想ギターで気軽に体験してみましょう。
+            </p>
+        </div>
+
+        <div class="persona-card">
+            <h3 class="persona-card__title">挫折経験者</h3>
+            <p class="persona-card__description">
+                「以前ギターを始めたが、Fコード等で挫折した」という人に。
+                今度は続けられる、新しい練習方法を提供します。
+            </p>
+        </div>
+
+        <div class="persona-card">
+            <h3 class="persona-card__title">継続したい学習者</h3>
+            <p class="persona-card__description">
+                「毎日の練習を習慣化したい」という人に。
+                進捗の可視化と目標設定で、モチベーションを維持しましょう。
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTAセクション -->
+<section class="cta">
+    <div class="cta__container">
+        <h2 class="cta__title">今すぐ始めましょう</h2>
+        <p class="cta__description">
+            無料でアカウントを作成して、ギター練習の旅を始めましょう。
+        </p>
+        <div class="cta__buttons">
+            <a href="{% url 'users:signup' %}" class="btn btn--primary btn--large">新規登録</a>
+            <a href="{% url 'users:login' %}" class="btn btn--secondary btn--large">ログイン</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
