@@ -4,6 +4,33 @@
 
 VirtuTuneはDjangoベースのWebアプリケーションで、仮想ギター演奏機能と進捗管理機能を提供します。MVCアーキテクチャを採用し、Djangoアプリを機能単位に分割したモジュール構成とします。
 
+### ペルソナベース設計方針
+
+VirtuTuneの設計は、3つのペルソナそれぞれが抱える課題とニーズに対応するように構成されています。
+
+| ペルソナ | 主要な課題 | 対応する設計要素 |
+|---------|-----------|-----------------|
+| **ペルソナ1**<br>（ギター初心者） | - 楽器を持っていない<br>- 何から始めていいかわからない<br>- 気軽に体験したい | - 仮想ギター（要件1）<br>- ランキング（要件13）<br>- ゲームモード（要件11） |
+| **ペルソナ2**<br>（挫折経験者） | - Fコード等の技術的壁<br>- 左手の指が痛い<br>- もう一度挑戦したい | - スマホPC連携（要件9）<br>- カメラジェスチャー（要件10）<br>- 左手入力の工夫 |
+| **ペルソナ3**<br>（継続したい学習者） | - 練習を忘れる<br>- モチベーション維持<br>- 成長を実感したい | - 進捗表示（要件3）<br>- 目標設定（要件4）<br>- リマインダー（要件5） |
+
+### ユーザーエクスペリエンス設計原則
+
+1. **ペルソナ1（初心者）ファースト**
+   - 初回訪問から5分以内に演奏体験を提供
+   - 説明を最小限ににし、直感的な操作を重視
+   - 小さな成功体験を積み重ねる設計
+
+2. **ペルソナ2（挫折経験者）の配慮**
+   - 左手操作はスマホのタッチ（痛みなし）
+   - 従来の挫折要因（Fコード等）を回避
+   - 「今回は続けられる」という実感を提供
+
+3. **ペルソナ3（継続したい）への動機付け**
+   - 可視的な進捗フィードバック
+   - 社会的要素（ランキング、実績）
+   - 習慣化をサポートするリマインダー
+
 ## アーキテクチャ
 
 ### ハイレベルアーキテクチャ
@@ -45,18 +72,25 @@ graph TD
 
 ### システムコンポーネント
 
-1. **Django Webアプリ**: メインのWebフレームワーク
-2. **仮想ギターアプリ (guitar)**: 仮想ギター演奏機能を担当
-3. **進捗管理アプリ (progress)**: 練習記録と進捗表示を担当
-4. **ユーザーアプリ (users)**: 認証とプロフィール管理を担当
-5. **ゲームアプリ (game)**: リズムゲームモードを担当
-6. **ランキングアプリ (ranking)**: ランキングとスコア管理を担当
-7. **モバイルAPI (mobile)**: スマホ用APIエンドポイント
-8. **WebSocketサーバー**: デバイス間リアルタイム通信
-9. **コアアプリ (core)**: 共通機能とベーステンプレート
-10. **Celery**: 非同期タスク（リマインダー送信）
-11. **データベース**: SQLite（開発）/ PostgreSQL（本番）
-12. **MediaPipe Hands**: カメラジェスチャー認識（JavaScriptライブラリ）
+| コンポーネント | 概要 | 主な対象ペルソナ | 関連要件 |
+|---------------|------|-----------------|----------|
+| **Django Webアプリ** | メインのWebフレームワーク | 全ペルソナ | - |
+| **仮想ギターアプリ (guitar)** | 仮想ギター演奏機能 | ペルソナ1, 2 | 要件1, 9, 10 |
+| **進捗管理アプリ (progress)** | 練習記録と進捗表示 | ペルソナ3 | 要件2, 3, 4 |
+| **ユーザーアプリ (users)** | 認証とプロフィール管理 | 全ペルソナ | 要件6, 7 |
+| **ゲームアプリ (game)** | リズムゲームモード | ペルソナ1, 3 | 要件11 |
+| **ランキングアプリ (ranking)** | ランキングとスコア管理 | ペルソナ1 | 要件13 |
+| **モバイルAPI (mobile)** | スマホ用APIエンドポイント | ペルソナ2 | 要件9 |
+| **WebSocketサーバー** | デバイス間リアルタイム通信 | ペルソナ2 | 要件9, 10 |
+| **コアアプリ (core)** | 共通機能とベーステンプレート | 全ペルソナ | 要件8 |
+| **Celery** | 非同期タスク（リマインダー送信） | ペルソナ3 | 要件5 |
+| **データベース** | SQLite（開発）/ PostgreSQL（本番） | - | - |
+| **MediaPipe Hands** | カメラジェスチャー認識（JSライブラリ） | ペルソナ2 | 要件10 |
+
+**設計方針:**
+- **ペルソナ1（初心者）**: 仮想ギター、ゲーム、ランキングで「気軽に始められる」「遊びながら学べる」を重視
+- **ペルソナ2（挫折経験者）**: スマホPC連携、カメラジェスチャーで「従来の挫折要因を回避」
+- **ペルソナ3（継続したい）**: 進捗管理、リマインダーで「習慣化とモチベーション維持」をサポート
 
 ### データフロー
 
@@ -90,6 +124,92 @@ sequenceDiagram
     PC->>PC: 練習終了
     PC->>PC: セッションデータ保存
 ```
+
+---
+
+### ページ遷移図
+
+```mermaid
+graph TD
+    %% 未ログイン状態
+    Index[ランディングページ /] --> Signup[サインアップ /signup/]
+    Index --> Login[ログイン /login/]
+    Signup --> Index{登録成功}
+    Login --> Index{ログイン成功}
+
+    %% ログイン後のメイン画面
+    Index --> Guitar[仮想ギター /guitar/]
+    Guitar --> Progress[進捗管理 /progress/]
+    Guitar --> Game[ゲームモード /game/]
+    Guitar --> Ranking[ランキング /ranking/]
+    Guitar --> Profile[プロフィール /profile/]
+
+    %% 進捗管理から
+    Progress --> Guitar
+    Progress --> Profile
+
+    %% ゲームモードから
+    Game --> GameResult[ゲーム結果 /game/result/]
+    GameResult --> Game
+    GameResult --> Ranking
+
+    %% ランキングから
+    Ranking --> Game
+    Ranking --> Guitar
+
+    %% プロフィールから
+    Profile --> Index{ログアウト}
+    Profile --> Guitar
+
+    %% スマホ用モバイルコントローラー
+    QR[QRコード /qr/] --> Controller[モバイルコントローラー /mobile/controller/]
+    Controller -.->|WebSocket| Guitar
+
+    %% スタイル定義
+    classDef public fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef auth fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef main fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef mobile fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+
+    class Index,Signup,Login auth
+    class Guitar,Progress,Game,Ranking,Profile,GameResult main
+    class QR,Controller mobile
+```
+
+### URLルーティング構成
+
+| URL | ビュー | 認証 | 対象ペルソナ | 説明 |
+|-----|-------|------|-------------|------|
+| **/ (public)** | | | | |
+| `/` | core.IndexView | - | 全ペルソナ（初回） | ランディングページ |
+| `/signup/` | users.SignUpView | - | 全ペルソナ | サインアップ |
+| `/login/` | auth.LoginView | - | 全ペルソナ | ログイン |
+| `/logout/` | auth.LogoutView | 要 | 全ペルソナ | ログアウト |
+| **/guitar (main)** | | | | |
+| `/guitar/` | guitar.GuitarView | 要 | ペルソナ1, 2 | 仮想ギター演奏画面 |
+| `/guitar/start/` | guitar.start_practice | 要 | ペルソナ1, 2 | 練習開始API |
+| `/guitar/end/` | guitar.end_practice | 要 | ペルソナ1, 2 | 練習終了API |
+| `/guitar/change/` | guitar.change_chord | 要 | ペルソナ1, 2 | コード変更API |
+| **/progress** | | | | |
+| `/progress/` | progress.ProgressView | 要 | ペルソナ3 | 進捗表示ページ |
+| `/progress/api/stats/` | progress.api_stats | 要 | ペルソナ3 | 統計データAPI |
+| **/game** | | | | |
+| `/game/` | game.GameListView | 要 | ペルソナ1, 3 | 楽曲選択画面 |
+| `/game/play/<int:song_id>/` | game.GamePlayView | 要 | ペルソナ1, 3 | ゲームプレイ画面 |
+| `/game/result/<int:session_id>/` | game.GameResultView | 要 | ペルソナ1, 3 | ゲーム結果画面 |
+| **/ranking** | | | | |
+| `/ranking/` | ranking.RankingView | 要 | ペルソナ1 | ランキングページ |
+| `/ranking/api/daily/` | ranking.api_daily | 要 | ペルソナ1 | 日次ランキングAPI |
+| `/ranking/api/weekly/` | ranking.api_weekly | 要 | ペルソナ1 | 週間ランキングAPI |
+| **/profile** | | | | |
+| `/profile/` | users.ProfileView | 要 | 全ペルソナ | プロフィールページ |
+| `/profile/update/` | users.ProfileUpdateView | 要 | 全ペルソナ | プロフィール更新 |
+| `/profile/delete/` | users.AccountDeleteView | 要 | 全ペルソナ | アカウント削除 |
+| **/mobile (smartphone)** | | | | |
+| `/mobile/qr/` | mobile.qr_code | 要 | ペルソナ2 | QRコード生成 |
+| `/mobile/controller/` | mobile.controller | - | ペルソナ2 | モバイルコントローラー |
+| **/websocket** | | | | |
+| `/ws/guitar/<session_id>/` | websocket.GuitarConsumer | 要 | ペルソナ2 | WebSocketエンドポイント |
 
 ---
 
@@ -1870,6 +1990,9 @@ graph LR
 | 2026-01-27 | Django ChannelsでWebSocket実装 | Djangoと統合されたWebSocketソリューション | ASGIサーバー（Daphne）必要 |
 | 2026-01-27 | リズムゲームモードとランキングを実装 | ゲーム感覚で学べる環境、社会的なモチベーション | 7テーブル構成、ゲーム関連アプリ |
 | 2026-01-27 | 音符シーケンスをJSONで保存 | 柔軟なデータ構造、将来的な譜面追加容易 | songs.notesフィールド |
+| 2026-01-27 | **ペルソナベース設計の採用** | **各ペルソナの異なる課題とニーズに対応するため** | **各機能の優先度と設計方針を決定** |
+| 2026-01-27 | **ペルソナ2（挫折経験者）にスマホ左手操作を提供** | **Fコード等の挫折要因を回避、左手の痛みを解消** | **要件9, 10でタッチ入力を採用** |
+| 2026-01-27 | **ペルソナ3（継続したい）に進捗可視化を強化** | **成長の実感が習慣化の鍵** | **要件3, 4でグラフ、目標達成フィードバックを実装** |
 
 ---
 
