@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,253 +5,271 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>モバイルコントローラー | VirtuTune</title>
-    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    <title>VirtuTune コントローラー</title>
     <style>
-        /* 指板図のスタイル */
-        .fretboard-diagram {
-            background: linear-gradient(to bottom, #8B4513, #A0522D);
-            border-radius: 10px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
             padding: 15px;
-            margin: 15px 0;
-            position: relative;
         }
 
-        .fretboard-diagram h3 {
-            color: #fff;
-            margin-bottom: 10px;
-            font-size: 14px;
+        .controller-container {
+            max-width: 640px;
+            margin: 0 auto;
         }
 
-        .diagram-strings {
-            position: relative;
-        }
-
-        .diagram-string {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            position: relative;
-        }
-
-        .string-label {
-            color: #ffd700;
-            font-weight: bold;
-            font-size: 12px;
-            width: 30px;
-        }
-
-        .diagram-frets {
-            flex: 1;
-            display: flex;
-            position: relative;
-        }
-
-        .diagram-fret {
-            flex: 1;
-            border-left: 2px solid #333;
-            border-right: 1px solid #555;
-            height: 40px;
-            position: relative;
-        }
-
-        .finger-dot {
-            width: 30px;
-            height: 30px;
-            background: rgba(255, 215, 0, 0.9);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-            z-index: 10;
-        }
-
-        .finger-dot.bass {
-            background: rgba(255, 100, 100, 0.9);
-        }
-
-        /* カメラプレビュー */
-        .camera-preview-section {
+        .controller-header {
             background: white;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 15px;
+            padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .camera-preview-section h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .camera-preview-container {
-            position: relative;
-            width: 100%;
-            height: 0;
-            padding-bottom: 75%; /* 4:3 アスペクト比 */
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        #camera-feed {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .camera-placeholder {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #666;
             text-align: center;
-            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        /* アクティビティインジケーター */
-        .activity-indicator {
+        .controller-header h1 {
+            color: #667eea;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #764ba2;
+            font-size: 0.9em;
+        }
+
+        .connection-status {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
-            padding: 8px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
-        .activity-dot {
-            width: 10px;
-            height: 10px;
+        .status-dot {
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: #ccc;
+            background-color: #dc3545;
+            animation: pulse 2s infinite;
         }
 
-        .activity-dot.active {
-            background: #28a745;
-            animation: pulse 1.5s infinite;
-        }
-
-        .activity-text {
-            font-size: 12px;
-            color: #666;
+        .status-dot.connected {
+            background-color: #28a745;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
         }
 
-        /* タップ時のフィードバック */
-        .chord-btn.tapped {
-            animation: tapFeedback 0.3s ease;
+        .status-text {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
         }
 
-        @keyframes tapFeedback {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); background: #5568d3; }
-            100% { transform: scale(1); }
+        .message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.95em;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .pairing-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .pairing-section h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .chord-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chord-section h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .section-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .chord-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .chord-btn {
+            padding: 25px 20px;
+            border: 3px solid #764ba2;
+            border-radius: 15px;
+            background: white;
+            color: #764ba2;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 100px;
+        }
+
+        .chord-btn:active {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .chord-btn.active {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+        }
+
+        .chord-name {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .chord-hint {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .current-chord {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .current-chord-label {
+            display: block;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .current-chord-name {
+            font-size: 2em;
+            font-weight: 700;
+            color: #764ba2;
+        }
+
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <div class="controller-container">
         <header class="controller-header">
-            <h1>VirtuTune コントローラー</h1>
-            <p class="subtitle">左手でコードを選択</p>
-            <div class="activity-indicator">
-                <div id="activity-dot" class="activity-dot"></div>
-                <span id="activity-text" class="activity-text">未接続</span>
-            </div>
+            <h1>🎸 VirtuTune</h1>
+            <p class="subtitle">モバイルコントローラー</p>
         </header>
 
-        <!-- 接続ステータス -->
         <section class="connection-status">
             <div class="status-indicator">
                 <div id="status-dot" class="status-dot"></div>
                 <span id="status-text" class="status-text">未接続</span>
             </div>
             <div id="connection-message" class="message info">
-                PCで表示されたQRコードをスキャンしてください
+                セッションID: <strong>{{ session_id }}</strong>
             </div>
         </section>
 
-        <!-- カメラプレビュー -->
-        <section class="camera-preview-section">
-            <h3>📸 PCカメラ映像</h3>
-            <div class="camera-preview-container">
-                <canvas id="camera-feed"></canvas>
-                <div class="camera-placeholder">
-                    <div>📷</div>
-                    <div>カメラ待機中...</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ペアリングセクション -->
-        <section class="pairing-section" id="pairing-section">
-            <h2>ペアリング</h2>
-            <div class="input-group">
-                <label for="session-id">セッションID</label>
-                <input
-                    type="text"
-                    id="session-id"
-                    placeholder="セッションIDを入力"
-                    autocomplete="off"
-                    value="{{ session_id }}"
-                />
-            </div>
-            <button id="connect-btn" class="btn btn-primary">接続</button>
-        </section>
-
-        <!-- 練習コントロールセクション -->
-        <section class="practice-section" id="practice-section">
-            <h2>練習コントロール</h2>
-            <div class="practice-info">
-                <div class="practice-timer">
-                    <span id="timer-display">00:00</span>
-                </div>
-                <div class="practice-status">
-                    <span id="practice-status-text">練習未開始</span>
-                </div>
-            </div>
-            <div class="practice-buttons">
-                <button id="start-practice-btn" class="btn btn-practice btn-start">
-                    練習開始
-                </button>
-                <button id="stop-practice-btn" class="btn btn-practice btn-stop" disabled>
-                    練習終了
-                </button>
-            </div>
-        </section>
-
-        <!-- コードセクション -->
         <section class="chord-section" id="chord-section">
             <h2>コードを選択</h2>
             <p class="section-hint">タップしてコードを変更</p>
-
-            <!-- 指板図 -->
-            <div class="fretboard-diagram" id="fretboard-diagram">
-                <h3>🎸 指板図 - 現在のコード: <span id="diagram-chord-name">-</span></h3>
-                <div class="diagram-strings" id="diagram-strings">
-                    <!-- JavaScriptで動的に生成 -->
-                </div>
-            </div>
 
             <div class="chord-grid">
                 <button class="chord-btn" data-chord="C">
@@ -288,6 +305,7 @@
                     <span class="chord-hint">メジャー</span>
                 </button>
             </div>
+
             <div class="current-chord">
                 <span class="current-chord-label">現在のコード:</span>
                 <span id="current-chord-display" class="current-chord-name">-</span>
@@ -295,6 +313,44 @@
         </section>
     </div>
 
-    <script src="{% static 'js/mobile-controller-polling.js' %}"></script>
+    <script>
+        // 簡易版モバイルコントローラー
+        (function() {
+            'use strict';
+
+            const sessionId = '{{ session_id }}';
+            const chordButtons = document.querySelectorAll('.chord-btn');
+            const currentChordDisplay = document.getElementById('current-chord-display');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            // コードボタンのクリックイベント
+            chordButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const chord = this.getAttribute('data-chord');
+
+                    // アクティブクラスを切り替え
+                    chordButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // 現在のコードを表示
+                    currentChordDisplay.textContent = chord;
+
+                    // PCに送信（簡易版）
+                    sendChordChange(chord);
+                });
+            });
+
+            // コード変更を送信
+            function sendChordChange(chord) {
+                // WebSocketやポーリングでPCに送信
+                console.log('Chord change:', chord, 'Session:', sessionId);
+
+                // 接続状態を更新
+                statusDot.classList.add('connected');
+                statusText.textContent = '接続中';
+            }
+        })();
+    </script>
 </body>
 </html>
