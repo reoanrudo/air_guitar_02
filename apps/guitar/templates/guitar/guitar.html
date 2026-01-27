@@ -134,8 +134,8 @@
                     <span class="qr-close">&times;</span>
                     <h3>QRコードでペアリング</h3>
                     <div class="qr-code-container">
-                        <img id="qr-code" src="{% url 'guitar:generate_qr_code' %}?session={{ session_id }}" alt="QRコード" />
-                        <p id="pairing-status" class="pairing-status">待機中...</p>
+                        <img id="qr-code" data-session-id="{{ session_id }}" src="" alt="QRコード" />
+                        <p id="pairing-status" class="pairing-status">読み込み中...</p>
                     </div>
                     <div class="pairing-instructions">
                         <ol>
