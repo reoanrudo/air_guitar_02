@@ -290,6 +290,9 @@ DEFAULT_FROM_EMAIL = get_env_var(
 # =====================================================
 
 if not DEBUG:
+    # Railway/Renderのプロキシ対応
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
     SECURE_HSTS_SECONDS = 31536000  # 1年
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
