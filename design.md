@@ -1101,6 +1101,128 @@ virtutune/
 
 ---
 
+## 依存ライブラリ
+
+### バックエンド（Python）
+
+#### requirements.txt
+
+```txt
+# =====================================================
+# VirtuTune - Python Dependencies
+# =====================================================
+
+# ----- Django Framework -----
+Django>=5.0,<6.0
+django-environ>=1.0          # 環境変数管理
+
+# ----- Django Extensions -----
+django-extensions>=3.2       # Django拡張コマンド
+django-ratelimit>=4.1        # レート制限
+
+# ----- WebSocket (Real-time Communication) -----
+channels>=4.0                # Django Channels (WebSocket)
+channels-redis>=4.2          # Redisチャネルレイヤー
+redis>=5.0                   # Redisクライアント
+
+# ----- Task Queue (Reminders) -----
+celery>=5.3                  # 非同期タスクキュー
+django-celery-beat>=2.5      # Celery定期実行スケジューラ
+
+# ----- Database -----
+psycopg2-binary>=2.9         # PostgreSQLアダプタ（本番環境）
+
+# ----- Utilities -----
+qrcode>=7.4                  # QRコード生成
+Pillow>=10.0                 # 画像処理
+
+# ----- Development & Testing -----
+pytest>=7.4
+pytest-django>=4.5
+pytest-cov>=4.1
+coverage>=7.3
+black>=23.0                  # コードフォーマット
+flake8>=6.0                  # リンター
+mypy>=1.6                    # 型チェック
+
+# ----- Documentation -----
+sphinx>=7.1                  # ドキュメント生成
+sphinx-rtd-theme>=1.3        # ドキュメントテーマ
+```
+
+#### ライブラリ用途一覧
+
+| ライブラリ | 用途 | 必須 |
+|-----------|------|------|
+| Django | Webフレームワーク | ✅ |
+| django-ratelimit | APIレート制限（セキュリティ） | ✅ |
+| channels | WebSocket通信（スマホ-PC連携） | ✅ |
+| channels-redis | Redisチャネルレイヤー | ✅ |
+| redis | Redisクライアント | ✅ |
+| celery | 非同期タスク（リマインダー送信） | ✅ |
+| django-celery-beat | 定期実行スケジューラ | ✅ |
+| qrcode | QRコード生成（デバイスペアリング） | ✅ |
+| psycopg2-binary | PostgreSQL接続（本番環境） | ✅ |
+| Pillow | 画像処理（実績アイコン等） | ✅ |
+| django-extensions | 開発支援ツール | ⚪️ |
+| pytest | テストフレームワーク | ⚪️ |
+| black | コードフォーマット | ⚪️ |
+| flake8 | リンター | ⚪️ |
+
+---
+
+### フロントエンド（JavaScript/CDN）
+
+#### HTML内で読み込むライブラリ
+
+```html
+<!-- Chart.js - グラフ描画 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js"></script>
+
+<!-- MediaPipe - カメラジェスチャー認識 -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+```
+
+#### フロントエンドライブラリ用途
+
+| ライブラリ | 用途 | 必須 |
+|-----------|------|------|
+| Chart.js | 進捗グラフ描画 | ✅ |
+| MediaPipe Camera Utils | カメラアクセス | ✅ |
+| MediaPipe Hands | 手検出・ジェスチャー認識 | ✅ |
+| MediaPipe Drawing Utils | 手の骨格描画（デバッグ用） | ⚪️ |
+
+**注意**: MediaPipeはCDNから読み込み、サーバーにはデプロイしません。
+
+---
+
+### 開発ツール
+
+#### コード品質ツール
+
+```txt
+# black - コードフォーマット
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+# flake8 - リンター
+[flake8]
+max-line-length = 88
+exclude = .git,__pycache__,migrations
+extend-ignore = E203,W503
+
+# mypy - 型チェック
+[mypy]
+python_version = 3.11
+plugins = mypy_django_plugin.main
+```
+
+---
+
 ## 設定
 
 ### アプリケーション設定
