@@ -2,14 +2,21 @@
 
 ## 概要
 
-VirtuTuneの実装は、まず仮想ギター機能と進捗管理機能を持つMVP（Minimum Viable Product）を構築し、その後リマインダー機能などの追加機能を実装します。Djangoプロジェクトを機能単位のアプリに分割し、段階的に開発を進めます。
+VirtuTuneの実装は、まず仮想ギター機能と進捗管理機能、スマホPC連携機能、カメラジェスチャー機能を持つMVP（Minimum Viable Product）を構築し、その後リマインダー機能、リズムゲームモード、ランキング機能などの追加機能を実装します。Djangoプロジェクトを機能単位のアプリに分割し、段階的に開発を進めます。
+
+**主要な技術的特徴:**
+- **スマホ+PCデュアルデバイス**: 左手（スマホ）でコード選択、右手（PCカメラ）でストローク判定
+- **Django Channels**: WebSocketによるリアルタイム通信
+- **MediaPipe Hands**: カメラジェスチャー認識
+- **リズムゲーム**: Guitar Hero風の音符フローとスコアシステム
+- **ランキング**: 日次・週間ランキングと実績バッジシステム
 
 ## タスクサマリー
 
 | フェーズ | 総タスク数 | 完了 | 進行中 | 未着手 | ブロック中 |
 |---------|------------|------|--------|---------|------------|
-| フェーズ1 | 9 | 0 | 0 | 9 | 0 |
-| フェーズ2 | 5 | 0 | 0 | 5 | 0 |
+| フェーズ1 | 16 | 0 | 0 | 16 | 0 |
+| フェーズ2 | 10 | 0 | 0 | 10 | 0 |
 | フェーズ3 | 3 | 0 | 0 | 3 | 0 |
 
 ---
@@ -399,6 +406,202 @@ VirtuTuneの実装は、まず仮想ギター機能と進捗管理機能を持�
 
 ---
 
+### 🔴 タスク 1.10: Django ChannelsセットアップとWebSocket実装
+
+**工数:** 4時間
+**依存関係:** タスク 1.1
+
+- [ ] Django Channelsをインストール
+  ```bash
+  pip install channels channels-redis
+  ```
+- [ ] ASGI設定を構成
+  ```python
+  # config/asgi.py
+  import os
+  from django.core.asgi import get_asgi_application
+  from channels.routing import ProtocolTypeRouter
+
+  os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+  application = ProtocolTypeRouter({
+      "http": get_asgi_application(),
+      "websocket": AuthMiddlewareStack(URLRouter(routing.websocket_urlpatterns)),
+  })
+  ```
+- [ ] Redisチャネルレイヤー設定
+- [ ] WebSocketConsumerを実装
+  ```python
+  # apps/websocket/consumers.py
+  class GuitarConsumer(AsyncWebsocketConsumer):
+      async def connect(self):
+          self.session_id = self.scope['url_route']['kwargs']['session_id']
+          await self.accept()
+
+      async def receive(self, text_data):
+          data = json.loads(text_data)
+          if data['type'] == 'chord_change':
+              await self.channel_layer.group_send(...)
+  ```
+- [ ] WebSocketルーティング設定
+
+**要件:** 要件9（スマホPC連携機能）
+
+---
+
+### 🔴 タスク 1.11: QRコードペアリング実装
+
+**工数:** 3時間
+**依存関係:** タスク 1.10
+
+- [ ] qrcodeライブラリをインストール
+- [ ] QRコード生成APIを実装
+  ```python
+  # apps/mobile/views.py
+  def generate_qr_code(request):
+      session_id = str(uuid.uuid4())
+      qr = qrcode.make(session_id)
+      buffer = io.BytesIO()
+      qr.save(buffer, format='PNG')
+      return HttpResponse(buffer.getvalue(), content_type='image/png')
+  ```
+- [ ] セッション管理を実装
+- [ ] PC画面にQRコード表示
+- [ ] スマホ側QR読み取り実装
+
+**要件:** 要件9（スマホPC連携機能）
+
+---
+
+### 🔴 タスク 1.12: カメラジェスチャー認識実装
+
+**工数:** 6時間
+**依存関係:** タスク 1.5
+
+- [ ] MediaPipe Handsライブラリ統合
+  ```html
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  ```
+- [ ] GestureRecognizerクラスを実装
+  ```javascript
+  // static/js/camera.js
+  class GestureRecognizer {
+      async startCamera(videoElement) { ... }
+      onResults(results) { ... }
+      isStrumming(current, previous) { ... }
+      triggerNote(velocity) { ... }
+  }
+  ```
+- [ ] カメラアクセス許可実装
+- [ ] プライバシー配慮（即時破棄）実装
+- [ ] PC画面にカメラ映像を表示
+
+**要件:** 要件10（カメラジェスチャー機能）
+
+---
+
+### 🔴 タスク 1.13: モバイルコントローラー実装
+
+**工数:** 4時間
+**依存関係:** タスク 1.11
+
+- [ ] モバイルコントローラー画面を作成
+  ```html
+  <!-- apps/mobile/templates/mobile/controller.html -->
+  <div class="controller">
+      <div class="status">接続中</div>
+      <div class="chord-grid">
+          <button data-chord="C">C</button>
+          <button data-chord="G">G</button>
+          <button data-chord="Am">Am</button>
+          ...
+      </div>
+  </div>
+  ```
+- [ ] WebSocket接続実装
+  ```javascript
+  const ws = new WebSocket(`ws://localhost:8000/ws/guitar/${sessionId}/`);
+  ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      // PC側の状態を反映
+  };
+  ```
+- [ ] コード変更イベント送信実装
+- [ ] レスポンシブデザイン（モバイル最適化）
+
+**要件:** 要件9（スマホPC連携機能）
+
+---
+
+### 🔴 タスク 1.14: スマホPC連携統合テスト
+
+**工数:** 2時間
+**依存関係:** タスク 1.10, 1.12, 1.13
+
+- [ ] QRコード読み取り～WebSocket接続フローをテスト
+- [ ] スマホコード変更→PC音声再生フローをテスト
+- [ ] カメラストローク→音声再生フローをテスト
+- [ ] 遅延測定（目標: 100ms以内）
+- [ ] 接続切断・再接続テスト
+
+**要件:** 要件9, 要件10
+
+---
+
+### 🔴 タスク 1.15: ゲームデータモデル実装
+
+**工数:** 2時間
+**依存関係:** タスク 1.2
+
+- [ ] Songモデルを実装
+  ```python
+  # apps/game/models.py
+  class Song(models.Model):
+      name = models.CharField(max_length=255, unique=True)
+      artist = models.CharField(max_length=255)
+      difficulty = models.IntegerField(default=1)
+      tempo = models.IntegerField(default=120)
+      notes = models.JSONField(default=list)
+      duration_seconds = models.IntegerField(default=0)
+  ```
+- [ ] SongNoteモデルを実装
+- [ ] GameSessionモデルを実装
+- [ ] Scoreモデルを実装
+- [ ] Achievementモデルを実装
+- [ ] マイグレーション作成
+
+**要件:** 要件11（リズムゲームモード）、要件13（ランキング機能）
+
+---
+
+### 🔴 タスク 1.16: 視覚フィードバック実装
+
+**工数:** 4時間
+**依存関係:** タスク 1.6
+
+- [ ] 弦発光アニメーション実装
+  ```css
+  .string.glowing {
+      box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+      animation: glow-fade 0.5s ease-out;
+  }
+  ```
+- [ ] 音波ビジュアライザー実装
+  ```javascript
+  // Web Audio APIで波形取得
+  const analyser = audioContext.createAnalyser();
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  // Canvasに波形描画
+  ```
+- [ ] パーフェクト/グレート/ミス演出実装
+- [ ] 目標達成時グラデーション演出実装
+
+**要件:** 要件12（視覚フィードバック機能）
+
+---
+
 ### 🔴 タスク 1.99: フェーズ1 リファクタリングとコード品質レビュー
 
 **工数:** 4-8時間
@@ -549,6 +752,150 @@ VirtuTuneの実装は、まず仮想ギター機能と進捗管理機能を持�
 
 ---
 
+### 🔴 タスク 2.6: リズムゲームモード実装
+
+**工数:** 8時間
+**依存関係:** タスク 1.15
+
+- [ ] ゲームモード/フリーモード切替を実装
+- [ ] 音符フロー描画を実装（Guitar Hero風）
+  ```javascript
+  // static/js/game.js
+  class RhythmGame {
+      start(songId) { ... }
+      update() {
+          // 音符を左から右に流す
+          notes.forEach(note => {
+              note.x -= speed * deltaTime;
+              if (note.hitTiming) {
+                  // タイミング判定
+              }
+          });
+      }
+      checkHit(chord, timing) { ... }
+  }
+  ```
+- [ ] タイミング判定実装（Perfect/Great/Good/Miss）
+- [ ] スコア計算実装
+- [ ] コンボシステム実装
+- [ ] ゲーム結果画面実装
+
+**要件:** 要件11（リズムゲームモード）
+
+---
+
+### 🔴 タスク 2.7: 楽曲データ作成
+
+**工数:** 4時間
+**依存関係:** タスク 2.6
+
+- [ ] 基本楽曲を3曲作成
+  - 初心者向けの簡単な譜面
+  - notes JSONデータ作成
+- [ ] Songデータをシード
+  ```python
+  Song.objects.create(
+      name="Twinkle Twinkle",
+      artist="Traditional",
+      difficulty=1,
+      tempo=120,
+      notes=[
+          {"timing": 0.0, "note": "C", "duration": 1.0},
+          {"timing": 1.0, "note": "C", "duration": 1.0},
+          {"timing": 2.0, "note": "G", "duration": 1.0},
+          ...
+      ]
+  )
+  ```
+- [ ] 難易度調整
+
+**要件:** 要件11（リズムゲームモード）
+
+---
+
+### 🔴 タスク 2.8: ランキング機能実装
+
+**工数:** 4時間
+**依存関係:** タスク 2.6, タスク 2.7
+
+- [ ] RankingServiceを実装
+  ```python
+  # apps/ranking/services.py
+  class RankingService:
+      @staticmethod
+      def get_daily_leaderboard(song_id, limit=100):
+          return Score.objects.filter(
+              song_id=song_id,
+              date=timezone.now().date()
+          ).order_by('-score')[:limit]
+
+      @staticmethod
+      def get_weekly_leaderboard(song_id, limit=100):
+          week_ago = timezone.now() - timedelta(days=7)
+          return Score.objects.filter(
+              song_id=song_id,
+              date__gte=week_ago.date()
+          ).order_by('-score')[:limit]
+  ```
+- [ ] ランキングビューを実装
+- [ ] ランキングテンプレートを作成
+- [ ] ハンドルネーム生成機能を実装
+  ```python
+  def generate_handle_name(user):
+      # ランダムなハンドルネーム生成
+      adjectives = ['Happy', 'Brave', 'Swift', ...]
+      nouns = ['Guitarist', 'Player', 'Master', ...]
+      return f"{random.choice(adjectives)}{random.choice(nouns)}{user.id % 1000}"
+  ```
+- [ ] 自分の順位をハイライト表示
+
+**要件:** 要件13（ランキング機能）
+
+---
+
+### 🔴 タスク 2.9: 実績・バッジシステム実装
+
+**工数:** 3時間
+**依存関係:** タスク 2.8
+
+- [ ] 実績マスタデータを作成
+  - 初回プレイ
+  - 10連続プレイ
+  - パーフェクト取得
+  - スコア1000達成
+  - ...
+- [ ] 実績解除ロジックを実装
+  ```python
+  def check_achievements(user, game_session):
+      if game_session.accuracy == 1.0:
+          unlock_achievement(user, 'PERFECT_PLAY')
+      if Score.objects.filter(user=user).count() == 1:
+          unlock_achievement(user, 'FIRST_PLAY')
+      ...
+  ```
+- [ ] 実績表示UIを実装
+- [ ] 実績アイコン（SVG）作成
+
+**要件:** 要件13（ランキング機能）
+
+---
+
+### 🔴 タスク 2.10: WebSocket/カメラ連携ゲームモード
+
+**工数:** 4時間
+**依存関係:** タスク 1.14, タスク 2.6
+
+- [ ] ゲームモードでのWebSocket連携
+  - スマホでコード選択→PC側判定
+  - カメラでストローク判定→スコア計算
+- [ ] ゲームセッション管理実装
+- [ ] リアルタイムスコア同期
+- [ ] 統合テスト
+
+**要件:** 要件9, 要件10, 要件11
+
+---
+
 ### 🔴 タスク 2.99: フェーズ2 リファクタリング
 
 **工数:** 4時間
@@ -629,12 +976,27 @@ graph LR
     T1.1 --> T1.2
     T1.2 --> T1.3
     T1.2 --> T1.5
+    T1.2 --> T1.15
     T1.1 --> T1.4
+    T1.1 --> T1.10
+    T1.1 --> T1.11
     T1.5 --> T1.6
+    T1.5 --> T1.12
+    T1.5 --> T1.16
     T1.6 --> T1.7
     T1.7 --> T1.8
     T1.8 --> T1.9
+    T1.9 --> T1.16
+    T1.10 --> T1.11
+    T1.11 --> T1.13
+    T1.10 --> T1.12
+    T1.10 --> T1.13
+    T1.10 --> T1.12 --> T1.14
+    T1.11 --> T1.13 --> T1.14
     T1.9 --> T1.99
+    T1.14 --> T1.99
+    T1.15 --> T1.99
+    T1.16 --> T1.99
 
     T1.99 --> T2.1
     T2.1 --> T2.2
@@ -642,6 +1004,13 @@ graph LR
     T2.1 --> T2.4
     T2.2 --> T2.3
     T2.3 --> T2.5
+    T1.15 --> T2.6
+    T2.6 --> T2.7
+    T2.6 --> T2.8
+    T2.8 --> T2.9
+    T1.14 --> T2.10
+    T2.6 --> T2.10
+    T2.10 --> T2.99
     T2.5 --> T2.99
 
     T2.99 --> T3.1
@@ -671,6 +1040,8 @@ graph LR
 | 2026-01-27 | セキュリティレビュー | セッションタイムアウト設定を追加 | セッションハイジャック対策 |
 | 2026-01-27 | セキュリティレビュー | パスワードリセットトークン有効期限を明記 | トークン盗難リスク低減 |
 | 2026-01-27 | セキュリティレビュー | セキュリティヘッダー設定を追加 | HTTPS強化、クリックジャッキング対策 |
+| 2026-01-27 | 要件確定 | フェーズ1に7タスク、フェーズ2に5タスクを追加 | スマホPC連携、カメラジェスチャー、リズムゲーム、ランキング機能の追加 |
+| 2026-01-27 | 設計更新 | タスク依存関係図を更新 | 新機能の依存関係を反映 |
 
 ---
 

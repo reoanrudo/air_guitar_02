@@ -10,21 +10,34 @@ VirtuTuneはDjangoベースのWebアプリケーションで、仮想ギター�
 
 ```mermaid
 graph TD
-    Browser[Webブラウザ] -->|HTTP| WebApp[Django Webアプリ]
-    WebApp --> URLRouter[URLルーター]
-    URLRouter --> GuitarApp[仮想ギターアプリ]
+    Smartphone[スマホ] -->|HTTPS/WSS| MobileAPI[モバイルAPI]
+    PC[PC Webアプリ] -->|HTTP| WebApp[Django Webアプリ]
+
+    PC --> Camera[Webカメラ]
+    PC --> MediaPipe[MediaPipe Hands]
+    PC --> WebSocket[WebSocketサーバー]
+    PC --> URLRouter[URLルーター]
+
+    URLRouter --> CoreApp[コアアプリ]
+    URLRouter --> GuitarApp[仮ターアプリ]
     URLRouter --> ProgressApp[進捗管理アプリ]
     URLRouter --> UsersApp[ユーザーアプリ]
-    URLRouter --> CoreApp[コアアプリ]
+    URLRouter --> GameApp[ゲームアプリ]
+    URLRouter --> RankingApp[ランキングアプリ]
 
     GuitarApp --> ORM[Django ORM]
     ProgressApp --> ORM
     UsersApp --> ORM
+    GameApp --> ORM
+    RankingApp --> ORM
 
     ORM --> DB[(SQLite/PostgreSQL)]
 
     ProgressApp --> Celery[Celeryタスク]
     Celery --> Email[メール送信]
+
+    WebSocket --> Realtime[リアルタイム同期]
+    MediaPipe --> Gesture[ジェスチャー認識]
 
     WebApp --> Static[静的ファイル]
     WebApp --> Templates[テンプレート]
@@ -36,37 +49,46 @@ graph TD
 2. **仮想ギターアプリ (guitar)**: 仮想ギター演奏機能を担当
 3. **進捗管理アプリ (progress)**: 練習記録と進捗表示を担当
 4. **ユーザーアプリ (users)**: 認証とプロフィール管理を担当
-5. **コアアプリ (core)**: 共通機能とベーステンプレート
-6. **Celery**: 非同期タスク（リマインダー送信）
-7. **データベース**: SQLite（開発）/ PostgreSQL（本番）
+5. **ゲームアプリ (game)**: リズムゲームモードを担当
+6. **ランキングアプリ (ranking)**: ランキングとスコア管理を担当
+7. **モバイルAPI (mobile)**: スマホ用APIエンドポイント
+8. **WebSocketサーバー**: デバイス間リアルタイム通信
+9. **コアアプリ (core)**: 共通機能とベーステンプレート
+10. **Celery**: 非同期タスク（リマインダー送信）
+11. **データベース**: SQLite（開発）/ PostgreSQL（本番）
+12. **MediaPipe Hands**: カメラジェスチャー認識（JavaScriptライブラリ）
 
 ### データフロー
 
 ```mermaid
 sequenceDiagram
     participant U as ユーザー
-    participant V as ビュー
-    participant M as モデル
-    participant DB as データベース
+    participant S as スマホ
+    participant PC as PC
+    participant WS as WebSocket
+    participant Cam as カメラ
+    participant MP as MediaPipe
 
-    U->>V: 仮想ギターにアクセス
-    V->>M: コードデータ取得
-    M->>DB: SELECTクエリ
-    DB-->>M: コードデータ
-    M-->>V: コード情報
-    V-->>U: ギター画面を描画
+    Note over S,PC: デバイス連携フロー
+    PC->>PC: QRコード表示
+    S->>PC: QRコード読み取り
+    PC->>WS: WebSocket接続確立
+    WS-->>S: セッションID送信
 
-    U->>V: 練習開始
-    V->>M: セッション作成
-    M->>DB: INSERTクエリ
-    DB-->>M: セッションID
-    V-->>U: タイマー開始
+    Note over S,PC: 演奏フロー
+    S->>WS: コード変更（C→Am）
+    WS->>PC: コード変更通知
 
-    U->>V: 練習終了
-    V->>M: セッション更新
-    M->>DB: UPDATEクエリ
-    DB-->>M: 完了
-    V-->>U: 進捗更新
+    Note over PC,Cam: ストローク検知フロー
+    PC->>Cam: カメラ起動
+    Cam->>MP: 映像フレーム
+    MP->>MP: 手検出・解析
+    MP->>PC: ストローク検知イベント
+    PC->>PC: 音声再生
+
+    Note over PC,DB: 練習記録フロー
+    PC->>PC: 練習終了
+    PC->>PC: セッションデータ保存
 ```
 
 ---
@@ -245,6 +267,138 @@ class CoreUtils:
 
 ---
 
+### コンポーネント: ゲーム (game)
+
+**ステータス:** 🔴 未実装
+
+**責務:**
+- リズムゲームモードの提供
+- 音楽シーケンスデータの管理
+- スコア計算と保存
+- ゲームバランス調整
+
+**主要メソッド:**
+```python
+class GameService:
+    def get_song(song_id: int) -> Song
+    def calculate_score(note_hits: list, note_misses: list) -> int
+    def save_game_score(user: User, song_id: int, score: int) -> GameSession
+    def get_leaderboard(song_id: int, period: str) -> list
+```
+
+**依存関係:**
+- Songモデル
+- GameSessionモデル
+- Scoreモデル
+
+---
+
+### コンポーネント: ランキング (ranking)
+
+**ステータス:** 🔴 未実装
+
+**責務:**
+- ランキング集計と表示
+- 日次・週間ランキングの生成
+- 実績・バッジシステム
+- ハンドルネーム生成
+
+**主要メソッド:**
+```python
+class RankingService:
+    def get_daily_leaderboard(limit: int = 100) -> list
+    def get_weekly_leaderboard(limit: int = 100) -> list
+    def get_user_rank(user: User, song_id: int) -> int
+    def unlock_achievement(user: User, achievement_id: str) -> bool
+```
+
+**依存関係:**
+- Scoreモデル
+- Achievementモデル
+- Userモデル
+
+---
+
+### コンポーネント: WebSocketサーバー (websocket)
+
+**ステータス:** 🔴 未実装
+
+**責務:**
+- スマホとPCのリアルタイム通信
+- コード変更イベントの配信
+- 接続管理
+
+**主要メソッド:**
+```python
+class WebSocketConsumer(AsyncWebsocketConsumer):
+    async def connect(self): ...
+    async def receive(self, text_data): ...
+    async def chord_change(self, chord_name: str): ...
+    async def disconnect(self, close_code): ...
+```
+
+**依存関係:**
+- channels (Django Channels)
+    Redis (チャネルレイヤー)
+
+---
+
+### コンポーネント: カメラジェスチャー認識 (camera)
+
+**ステータス:** 🔴 未実装
+
+**責務:**
+- Webカメラへのアクセス
+- MediaPipe Handsによる手検出
+- ストローク動作の認識
+- タイミング計算
+
+**主要メソッド:**
+```python
+class GestureRecognizer:
+    async def start_camera(): ...
+    async def detect_hand(): ...
+    def is_strumming(landmarks, prev_landmarks) -> bool: ...
+    def strum_velocity(landmarks) -> float: ...
+```
+
+**依存関係:**
+- MediaPipe Hands (JavaScriptライブラリ)
+    MediaDevices API
+    OpenCV.js (オプション)
+
+---
+
+### コンポーネント: モバイルAPI (mobile)
+
+**ステータス:** 🔴 未実装
+
+**責務:**
+- スマホ用APIエンドポイント
+- QRコード生成
+- コントローラー画面用データ提供
+
+**主要メソッド:**
+```python
+class MobileAPI:
+    @require_http
+    def qr_code(request): # QRコード生成
+        ...
+    @require_http
+    def chord_list(request): # コード一覧
+        ...
+    @require_http
+    def chord_change(request): # コード変更
+        ...
+```
+
+**依存関係:**
+- Django REST Framework
+    qrcodeライブラリ
+    Chordモデル
+
+---
+
 ## データモデル
 
 ### ER図
@@ -252,9 +406,14 @@ class CoreUtils:
 ```mermaid
 erDiagram
     users ||--o{ practice_sessions : "練習記録"
+    users ||--o{ game_sessions : "ゲームセッション"
+    users ||--o{ scores : "スコア"
+    users ||--o{ achievements : "実績"
     users ||--o{ user_chords : "習得コード"
     chords ||--o{ user_chords : "習得状況"
     chords ||--o{ practice_sessions : "使用コード(JSON)"
+    songs ||--o{ game_sessions : "楽曲データ"
+    songs ||--o{ song_notes : "音符データ"
 
     users {
         BIGINT id PK
@@ -282,6 +441,46 @@ erDiagram
         TIMESTAMP created_at
     }
 
+    game_sessions {
+        BIGINT id PK
+        BIGINT user_id FK
+        SMALLINT song_id FK
+        INT score
+        INT max_combo
+        INT perfect_count
+        FLOAT accuracy
+        TIMESTAMP created_at
+    }
+
+    scores {
+        BIGINT id PK
+        BIGINT user_id FK
+        SMALLINT song_id FK
+        INT score
+        DATE date
+        TIMESTAMP created_at
+    }
+
+    songs {
+        SMALLINT id PK
+        VARCHAR(255) name UK
+        VARCHAR(255) artist
+        INT difficulty
+        INT tempo
+        JSON notes "音符シーケンス"
+        INT duration_seconds
+        SMALLINT display_order
+    }
+
+    song_notes {
+        BIGINT id PK
+        SMALLINT song_id FK
+        INT note_number
+        TIMESTAMP timing
+        STRING note_name
+        FLOAT duration
+    }
+
     chords {
         SMALLINT id PK
         VARCHAR(10) name UK
@@ -299,6 +498,15 @@ erDiagram
         TINYINT proficiency_level
         TIMESTAMP created_at
         TIMESTAMP updated_at
+    }
+
+    achievements {
+        BIGINT id PK
+        VARCHAR(50) name UK
+        VARCHAR(255) description
+        TEXT icon_url
+        SMALLINT tier
+        INT unlock_score
     }
 ```
 
@@ -687,6 +895,109 @@ class UserChord(models.Model):
         unique_together = [['user', 'chord']]
 ```
 
+```python
+# apps/game/models.py
+from django.db import models
+from django.conf import settings
+
+class Song(models.Model):
+    """楽曲マスタ"""
+    name = models.CharField(max_length=255, unique=True)
+    artist = models.CharField(max_length=255)
+    difficulty = models.IntegerField(default=1)  # 1-5
+    tempo = models.IntegerField(default=120)  # BPM
+    notes = models.JSONField(default=list)  # 音符シーケンス
+    duration_seconds = models.IntegerField(default=0)
+    display_order = models.SmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'songs'
+        ordering = ['display_order', 'name']
+
+class SongNote(models.Model):
+    """音符データ"""
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_notes')
+    note_number = models.IntegerField()
+    timing = models.FloatField()  # 秒単位
+    note_name = models.CharField(max_length=10)  # C, D, E... またはコード名
+    duration = models.FloatField(default=0.5)  # 音符の長さ
+
+    class Meta:
+        db_table = 'song_notes'
+        ordering = ['song', 'note_number']
+        unique_together = [['song', 'note_number']]
+
+class GameSession(models.Model):
+    """ゲームプレイセッション"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        db_index=True
+    )
+    song = models.ForeignKey(Song, on_delete=models.CASCADE)
+    score = models.IntegerField(default=0)
+    max_combo = models.IntegerField(default=0)
+    perfect_count = models.IntegerField(default=0)
+    great_count = models.IntegerField(default=0)
+    good_count = models.IntegerField(default=0)
+    miss_count = models.IntegerField(default=0)
+    accuracy = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'game_sessions'
+        indexes = [
+            models.Index(fields=['user', 'created_at'], name='idx_game_user_date'),
+            models.Index(fields=['song', 'score'], name='idx_game_song_score'),
+        ]
+
+class Score(models.Model):
+    """日次スコア（ランキング用）"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    song = models.ForeignKey(Song, on_delete=models.CASCADE)
+    score = models.IntegerField(default=0)
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'scores'
+        unique_together = [['user', 'song', 'date']]
+        indexes = [
+            models.Index(fields=['song', 'date', 'score'], name='idx_score_ranking'),
+        ]
+```
+
+```python
+# apps/ranking/models.py
+from django.db import models
+from django.conf import settings
+
+class Achievement(models.Model):
+    """実績・バッジ"""
+    name = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=255)
+    icon_url = models.TextField(blank=True)  # SVGまたは画像URL
+    tier = models.SmallIntegerField(default=1)  # 1=ブロンズ, 2=シルバー, 3=ゴールド
+    unlock_score = models.IntegerField(default=0)  # 解禁に必要なスコア
+    display_order = models.SmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'achievements'
+        ordering = ['display_order', 'tier', 'name']
+
+class UserAchievement(models.Model):
+    """ユーザー実績取得状態"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'user_achievements'
+        unique_together = [['user', 'achievement']]
+```
+
 ---
 
 ### ファイルストレージ構造
@@ -697,6 +1008,7 @@ virtutune/
 │   ├── __init__.py
 │   ├── settings.py
 │   ├── urls.py
+│   ├── asgi.py            # ASGI設定（WebSocket用）
 │   └── wsgi.py
 ├── apps/
 │   ├── core/              # コアアプリ
@@ -724,29 +1036,63 @@ virtutune/
 │   │   └── templates/
 │   │       └── progress/
 │   │           └── progress.html
-│   └── users/             # ユーザーアプリ
+│   ├── users/             # ユーザーアプリ
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── forms.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── templates/
+│   │       └── users/
+│   │           ├── login.html
+│   │           ├── signup.html
+│   │           └── profile.html
+│   ├── game/              # ゲームアプリ
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   ├── urls.py
+│   │   └── templates/
+│   │       └── game/
+│   │           ├── game.html
+│   │           └── result.html
+│   ├── ranking/           # ランキングアプリ
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── urls.py
+│   ├── mobile/            # モバイルAPI
+│   │   ├── __init__.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   └── websocket/         # WebSocketコンシューマー
 │       ├── __init__.py
-│       ├── models.py
-│       ├── forms.py
-│       ├── views.py
-│       ├── urls.py
-│       └── templates/
-│           └── users/
-│               ├── login.html
-│               ├── signup.html
-│               └── profile.html
+│       ├── consumers.py
+│       ├── routing.py
+│       └── middleware.py
 ├── static/
 │   ├── css/
-│   │   └── styles.css
+│   │   ├── styles.css
+│   │   ├── guitar.css
+│   │   └── game.css
 │   ├── js/
 │   │   ├── guitar.js
 │   │   ├── progress.js
-│   │   └── chart.js
-│   └── sounds/
-│       └── strings/       # 各弦の音声ファイル
-│           ├── string_1.mp3
-│           ├── string_2.mp3
-│           └── ...
+│   │   ├── chart.js
+│   │   ├── camera.js      # MediaPipeカメラ処理
+│   │   ├── websocket.js   # WebSocket通信
+│   │   └── game.js        # ゲームロジック
+│   ├── sounds/
+│   │   └── strings/       # 各弦の音声ファイル
+│   │       ├── string_1.mp3
+│   │       ├── string_2.mp3
+│   │       └── ...
+│   └── images/
+│       └── achievements/  # 実績バッジ画像
+├── media/
+│   └── songs/             # 楽曲データ（将来的）
 ├── templates/
 ├── manage.py
 ├── requirements.txt
@@ -778,6 +1124,9 @@ INSTALLED_APPS = [
     'apps.guitar',
     'apps.progress',
     'apps.users',
+    'apps.game',        # ゲーム機能
+    'apps.ranking',     # ランキング機能
+    'apps.mobile',      # モバイルAPI
 ]
 
 # データベース設定
@@ -974,6 +1323,205 @@ def login_view(request):
 
 ---
 
+## WebSocket技術仕様
+
+### プロトコル仕様
+
+**接続エンドポイント**: `ws://localhost:8000/ws/guitar/{session_id}/`
+
+**メッセージフォーマット**:
+```json
+{
+  "type": "chord_change",
+  "data": {
+    "chord": "C",
+    "timestamp": 1706347200
+  }
+}
+```
+
+### メッセージタイプ
+
+| タイプ | 方向 | 説明 |
+|--------|------|------|
+| `chord_change` | スマホ→PC | コード変更通知 |
+| `connect` | PC→スマホ | 接続確立通知 |
+| `disconnect` | 双方向 | 切断通知 |
+| `ping` | 双方向 | 接続維持用ハートビート |
+| `session_start` | PC→スマホ | 演奏セッション開始 |
+| `session_end` | PC→スマホ | 演奏セッション終了 |
+
+### Django Channels設定
+
+```python
+# config/settings.py
+ASGI_APPLICATION = 'config.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [os.environ.get('REDIS_URL', 'redis://localhost:6379/0')],
+        },
+    },
+}
+
+INSTALLED_APPS += [
+    'channels',
+    'apps.websocket',
+]
+```
+
+### コンシューマー実装
+
+```python
+# apps/websocket/consumers.py
+import json
+from channels.generic.websocket import AsyncWebsocketConsumer
+
+class GuitarConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.session_id = self.scope['url_route']['kwargs']['session_id']
+        self.room_group_name = f'guitar_{self.session_id}'
+
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message_type = text_data_json.get('type')
+
+        if message_type == 'chord_change':
+            chord = text_data_json['data']['chord']
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chord_change',
+                    'chord': chord,
+                }
+            )
+
+    async def chord_change(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'chord_change',
+            'data': {'chord': event['chord']}
+        }))
+```
+
+### ルーティング
+
+```python
+# apps/websocket/routing.py
+from django.urls import re_path
+from . import consumers
+
+websocket_urlpatterns = [
+    re_path(r'ws/guitar/(?P<session_id>[^/]+)/$', consumers.GuitarConsumer.as_asgi()),
+]
+```
+
+---
+
+## MediaPipe統合詳細
+
+### 技術仕様
+
+**ライブラリ**: MediaPipe Hands (JavaScript)
+**解像度**: 640x480
+**検出遅延目標**: 100ms以内
+**検出手**: 両手対応（最大2手）
+
+### 実装フロー
+
+```javascript
+// static/js/camera.js
+import { Hands } from '@mediapipe/hands';
+import { Camera } from '@mediapipe/camera_utils';
+
+class GestureRecognizer {
+    constructor() {
+        this.hands = new Hands({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }
+        });
+
+        this.hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
+
+        this.hands.onResults(this.onResults.bind(this));
+        this.prevLandmarks = null;
+    }
+
+    async startCamera(videoElement) {
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await this.hands.send({ image: videoElement });
+            },
+            width: 640,
+            height: 480
+        });
+        await camera.start();
+    }
+
+    onResults(results) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+
+            if (this.isStrumming(landmarks, this.prevLandmarks)) {
+                const velocity = this.strumVelocity(landmarks);
+                this.triggerNote(velocity);
+            }
+
+            this.prevLandmarks = landmarks;
+        }
+    }
+
+    isStrumming(current, previous) {
+        if (!previous) return false;
+
+        // 手首（landmark 0）のY座標の変化を検知
+        const currentY = current[0].y;
+        const previousY = previous[0].y;
+        const velocity = currentY - previousY;
+
+        // 下方向への動きでストロークと判定
+        return velocity > 0.05; // 閾値は調整可能
+    }
+
+    strumVelocity(landmarks) {
+        // 手首の中指の先までの距離でVelocityを計算
+        const wrist = landmarks[0];
+        const middleTip = landmarks[12];
+        return Math.sqrt(
+            Math.pow(wrist.x - middleTip.x, 2) +
+            Math.pow(wrist.y - middleTip.y, 2)
+        );
+    }
+
+    triggerNote(velocity) {
+        // 音声再生イベント発火
+        window.dispatchEvent(new CustomEvent('strum', { detail: { velocity } }));
+    }
+}
+```
+
+### プライバシー配慮
+
+- カメラ映像は処理後に即座に破棄
+- 画像データのサーバー送信は行わない
+- LEDが点灯中であることを明示
+- 処理はクライアントサイドのみで完結
+
+---
+
 ## デプロイメントアーキテクチャ
 
 ```mermaid
@@ -1002,6 +1550,12 @@ graph LR
 | 2026-01-27 | ER図と詳細スキーマ設計を追加 | データベース構造の明確化 | 4テーブル構成（users, practice_sessions, chords, user_chords） |
 | 2026-01-27 | user_chordsテーブルを追加 | 将来の習熟度追跡機能に備える | MVPでは未使用 |
 | 2026-01-27 | JSONB型でコードデータを保存 | 柔軟なデータ構造、フロントエンドとの連携容易 | finger_positions, chords_practiced |
+| 2026-01-27 | スマホ+PCのデュアルデバイスアーキテクチャを採用 | リアルなギター体験（左手コード選択、右手ストローク） | WebSocket実装、QRコードペアリング |
+| 2026-01-27 | MediaPipe Handsをカメラジェスチャー認識に採用 | 高精度かつ軽量、ブラウザで動作 | JavaScript実装、プライバシー配慮で即時破棄 |
+| 2026-01-27 | QRコード方式でデバイスペアリング | Web BluetoothはiOS対応が不完全 | QRコード生成ライブラリ |
+| 2026-01-27 | Django ChannelsでWebSocket実装 | Djangoと統合されたWebSocketソリューション | ASGIサーバー（Daphne）必要 |
+| 2026-01-27 | リズムゲームモードとランキングを実装 | ゲーム感覚で学べる環境、社会的なモチベーション | 7テーブル構成、ゲーム関連アプリ |
+| 2026-01-27 | 音符シーケンスをJSONで保存 | 柔軟なデータ構造、将来的な譜面追加容易 | songs.notesフィールド |
 
 ---
 
@@ -1026,7 +1580,8 @@ graph LR
 
 ## 未解決の質問
 
-- [ ] 音声ファイルのライセンス（商用利用可能なフリー音源）
-- [ ] 本番環境のホスティング先
+- [x] 音声ファイルのライセンス → Freesound.org CC0ライセンスを使用
+- [x] 本番環境のホスティング先 → Renderを採用
 - [ ] ドメイン名
-- [ ] 初期コードデータの難易度基準
+- [x] 初期コードデータの難易度基準 → すべて難易度1（初心者向け）
+- [ ] 初期楽曲データの具体的な譜面設計
