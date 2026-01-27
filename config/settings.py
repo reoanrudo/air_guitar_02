@@ -134,12 +134,24 @@ ASGI_APPLICATION = "config.asgi.application"
 # データベース設定
 # =====================================================
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# RenderのPostgreSQLまたは開発環境のSQLite
+DATABASE_URL = get_env_var("DATABASE_URL", required=False)
+
+if DATABASE_URL:
+    # 本番環境
+    import dj_database_url
+
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL)
     }
-}
+else:
+    # 開発環境
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # =====================================================

@@ -11,6 +11,7 @@ python-decouple>=3.8
 django-extensions>=3.2
 django-ratelimit>=4.1
 django-redis>=5.4
+whitenoise>=6.6
 
 # ----- WebSocket (Real-time Communication) -----
 channels>=4.0
@@ -24,6 +25,7 @@ django-celery-beat>=2.5
 
 # ----- Database -----
 psycopg2-binary>=2.9
+dj-database-url>=2.1
 
 # ----- Utilities -----
 qrcode>=7.4
