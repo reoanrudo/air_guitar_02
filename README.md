@@ -18,6 +18,18 @@
 - Redis (WebSocket・Celery用)
 - PostgreSQL (本番環境、開発はSQLite)
 
+**Redisの起動（開発環境）:**
+```bash
+# macOS (Homebrew)
+brew services start redis
+
+# Linux
+sudo systemctl start redis
+
+# Docker
+docker run -d -p 6379:6379 redis:alpine
+```
+
 ### インストール手順
 
 ```bash

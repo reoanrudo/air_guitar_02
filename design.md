@@ -408,12 +408,13 @@ erDiagram
     users ||--o{ practice_sessions : "練習記録"
     users ||--o{ game_sessions : "ゲームセッション"
     users ||--o{ scores : "スコア"
-    users ||--o{ achievements : "実績"
+    users ||--o{ user_achievements : "実績取得"
     users ||--o{ user_chords : "習得コード"
     chords ||--o{ user_chords : "習得状況"
     chords ||--o{ practice_sessions : "使用コード(JSON)"
     songs ||--o{ game_sessions : "楽曲データ"
     songs ||--o{ song_notes : "音符データ"
+    achievements ||--o{ user_achievements : "ユーザー実績"
 
     users {
         BIGINT id PK
@@ -448,6 +449,9 @@ erDiagram
         INT score
         INT max_combo
         INT perfect_count
+        INT great_count
+        INT good_count
+        INT miss_count
         FLOAT accuracy
         TIMESTAMP created_at
     }
@@ -507,6 +511,13 @@ erDiagram
         TEXT icon_url
         SMALLINT tier
         INT unlock_score
+        SMALLINT display_order
+    }
+
+    user_achievements {
+        BIGINT user_id FK
+        BIGINT achievement_id FK
+        TIMESTAMP unlocked_at
     }
 ```
 
@@ -728,6 +739,100 @@ CREATE TABLE user_chords (
 
 CREATE INDEX idx_user_chords_user ON user_chords(user_id);
 CREATE INDEX idx_user_chords_proficiency ON user_chords(proficiency_level);
+
+-- 楽曲マスタ
+CREATE TABLE songs (
+    id SMALLSERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    artist VARCHAR(255) NOT NULL,
+    difficulty INTEGER NOT NULL DEFAULT 1,
+    tempo INTEGER NOT NULL DEFAULT 120,
+    notes JSONB NOT NULL DEFAULT '[]',
+    duration_seconds INTEGER NOT NULL DEFAULT 0,
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_difficulty_range CHECK (difficulty BETWEEN 1 AND 5)
+);
+
+CREATE INDEX idx_songs_name ON songs(name);
+CREATE INDEX idx_songs_difficulty ON songs(difficulty);
+CREATE INDEX idx_songs_display ON songs(display_order);
+
+-- 音符データ
+CREATE TABLE song_notes (
+    id BIGSERIAL PRIMARY KEY,
+    song_id SMALLINT NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    note_number INTEGER NOT NULL,
+    timing FLOAT NOT NULL,
+    note_name VARCHAR(10) NOT NULL,
+    duration FLOAT NOT NULL DEFAULT 0.5,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_song_note UNIQUE (song_id, note_number)
+);
+
+CREATE INDEX idx_song_notes_song ON song_notes(song_id, note_number);
+
+-- ゲームセッション
+CREATE TABLE game_sessions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    song_id SMALLINT NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    score INTEGER NOT NULL DEFAULT 0,
+    max_combo INTEGER NOT NULL DEFAULT 0,
+    perfect_count INTEGER NOT NULL DEFAULT 0,
+    great_count INTEGER NOT NULL DEFAULT 0,
+    good_count INTEGER NOT NULL DEFAULT 0,
+    miss_count INTEGER NOT NULL DEFAULT 0,
+    accuracy FLOAT NOT NULL DEFAULT 0.0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_accuracy_range CHECK (accuracy BETWEEN 0 AND 1)
+);
+
+CREATE INDEX idx_game_user_date ON game_sessions(user_id, created_at DESC);
+CREATE INDEX idx_game_song_score ON game_sessions(song_id, score DESC);
+
+-- 日次スコア（ランキング用）
+CREATE TABLE scores (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    song_id SMALLINT NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    score INTEGER NOT NULL DEFAULT 0,
+    date DATE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_user_song_date UNIQUE (user_id, song_id, date)
+);
+
+CREATE INDEX idx_score_ranking ON scores(song_id, date, score DESC);
+
+-- 実績マスタ
+CREATE TABLE achievements (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    icon_url TEXT,
+    tier SMALLINT NOT NULL DEFAULT 1,
+    unlock_score INTEGER NOT NULL DEFAULT 0,
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_achievements_tier ON achievements(tier);
+
+-- ユーザー実績
+CREATE TABLE user_achievements (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    achievement_id BIGINT NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_user_achievement UNIQUE (user_id, achievement_id)
+);
+
+CREATE INDEX idx_user_achievements_user ON user_achievements(user_id);
 ```
 
 ---
@@ -813,6 +918,93 @@ CREATE TABLE user_chords (
 );
 
 CREATE INDEX idx_user_chords_user ON user_chords(user_id);
+
+-- 楽曲マスタ
+CREATE TABLE songs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    artist VARCHAR(255) NOT NULL,
+    difficulty INTEGER NOT NULL DEFAULT 1
+        CHECK (difficulty BETWEEN 1 AND 5),
+    tempo INTEGER NOT NULL DEFAULT 120,
+    notes TEXT NOT NULL DEFAULT '[]',
+    duration_seconds INTEGER NOT NULL DEFAULT 0,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_songs_name ON songs(name);
+CREATE INDEX idx_songs_display ON songs(display_order);
+
+-- 音符データ
+CREATE TABLE song_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    song_id INTEGER NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    note_number INTEGER NOT NULL,
+    timing REAL NOT NULL,
+    note_name VARCHAR(10) NOT NULL,
+    duration REAL NOT NULL DEFAULT 0.5,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (song_id, note_number)
+);
+
+CREATE INDEX idx_song_notes_song ON song_notes(song_id, note_number);
+
+-- ゲームセッション
+CREATE TABLE game_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    song_id INTEGER NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    score INTEGER NOT NULL DEFAULT 0,
+    max_combo INTEGER NOT NULL DEFAULT 0,
+    perfect_count INTEGER NOT NULL DEFAULT 0,
+    great_count INTEGER NOT NULL DEFAULT 0,
+    good_count INTEGER NOT NULL DEFAULT 0,
+    miss_count INTEGER NOT NULL DEFAULT 0,
+    accuracy REAL NOT NULL DEFAULT 0.0
+        CHECK (accuracy >= 0 AND accuracy <= 1),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_game_user_date ON game_sessions(user_id, created_at DESC);
+
+-- 日次スコア
+CREATE TABLE scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    song_id INTEGER NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    score INTEGER NOT NULL DEFAULT 0,
+    date DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, song_id, date)
+);
+
+CREATE INDEX idx_score_ranking ON scores(song_id, date, score DESC);
+
+-- 実績マスタ
+CREATE TABLE achievements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    icon_url TEXT,
+    tier INTEGER NOT NULL DEFAULT 1,
+    unlock_score INTEGER NOT NULL DEFAULT 0,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_achievements_tier ON achievements(tier);
+
+-- ユーザー実績
+CREATE TABLE user_achievements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    achievement_id INTEGER NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, achievement_id)
+);
+
+CREATE INDEX idx_user_achievements_user ON user_achievements(user_id);
 ```
 
 ---
