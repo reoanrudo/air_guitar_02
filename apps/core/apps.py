@@ -14,6 +14,16 @@ class CoreConfig(AppConfig):
         if os.environ.get("MIGRATE_ON_STARTUP"):
             try:
                 call_command("migrate", "--noinput")
+
+                # テスト用ユーザーを作成（まだ存在しない場合のみ）
+                from apps.users.models import User
+
+                if not User.objects.filter(username="test").exists():
+                    User.objects.create_user(
+                        username="test",
+                        email="test@virtutune.com",
+                        password="test123"
+                    )
             except Exception:
                 # マイグレーション失敗は静かに無視
                 pass

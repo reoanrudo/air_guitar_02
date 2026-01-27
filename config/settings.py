@@ -62,7 +62,8 @@ else:
     ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
 
 # セッション設定
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # ブラウザを閉じるとセッション無効
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # ブラウザを閉じてもセッションを保持
+SESSION_COOKIE_AGE = 1209600  # セッション有効期限: 2週間（秒）
 
 # パスワードリセット
 PASSWORD_RESET_TIMEOUT = 3600  # 1時間（秒）
