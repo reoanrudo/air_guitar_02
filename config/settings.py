@@ -86,14 +86,13 @@ INSTALLED_APPS = [
     # サードパーティ
     "django_extensions",
     "channels",
-    "django_ratelimit",
-    "django_celery_beat",  # Celery定期実行スケジューラー
+    "django_celery_beat",
     # アプリ
     "apps.core",
     "apps.guitar",
     "apps.progress",
     "apps.users",
-    "apps.reminders",  # リマインダー機能
+    "apps.reminders",
     "apps.game",
     "apps.ranking",
     "apps.mobile",
