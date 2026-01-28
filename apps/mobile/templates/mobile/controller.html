@@ -238,9 +238,170 @@
             margin-bottom: 5px;
         }
 
-        .current-chord-name {
-            font-size: 2em;
+        /* ============================================
+           フレットボード
+           ============================================ */
+
+        .fretboard-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .fretboard-section h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            text-align: center;
             font-weight: 700;
+        }
+
+        .section-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .fretboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 4px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .fret-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            font-weight: bold;
+            font-size: 0.75em;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .string-row {
+            display: flex;
+            position: relative;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            height: 50px;
+        }
+
+        .string-row:last-child {
+            border-bottom: none;
+        }
+
+        .fret-zone {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .fret-zone:active {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(0.98);
+        }
+
+        .fret-zone.active {
+            background: #f97316;
+            color: white;
+            font-weight: bold;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+            z-index: 10;
+        }
+
+        .string-label-fretboard {
+            position: absolute;
+            left: -25px;
+            width: 25px;
+            text-align: right;
+            font-weight: bold;
+            color: #764ba2;
+            font-size: 0.8em;
+            z-index: 5;
+        }
+
+        /* ============================================
+           クイックコードショートカット
+           ============================================ */
+
+        .chord-shortcuts {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chord-shortcuts h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .chord-shortcuts-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .chord-shortcut-btn {
+            padding: 20px 10px;
+            border: 3px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 80px;
+        }
+
+        .chord-shortcut-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .chord-shortcut-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chord-shortcut-btn.active {
+            background: #f97316;
+            border-color: #f97316;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+        }
+
+        .shortcut-label {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .shortcut-finger {
+            font-size: 0.85em;
             color: #764ba2;
         }
 
@@ -271,7 +432,7 @@
             <h2>コードを選択</h2>
             <p class="section-hint">タップしてコードを変更</p>
 
-            <div class="chord-grid">
+            <div class="chord-buttons">
                 <button class="chord-btn" data-chord="C">
                     <span class="chord-name">C</span>
                     <span class="chord-hint">メジャー</span>
@@ -284,31 +445,82 @@
                     <span class="chord-name">Am</span>
                     <span class="chord-hint">マイナー</span>
                 </button>
-                <button class="chord-btn" data-chord="F">
-                    <span class="chord-name">F</span>
+            </div>
+
+            <div class="current-chord">
+                <span class="current-chord-label">現在のコード:</span>
+                <span id="current-chord-display" class="current-chord-name">-</span>
+            </div>
+        </section>
+
+        <!-- フレットボードセクション -->
+        <section class="fretboard-section">
+            <h2>フレットボード</h2>
+            <p class="section-hint">弦とフレットをタップして指を配置</p>
+
+            <div class="fretboard-grid" id="fretboard-grid">
+                <!-- フレットボードが動的に生成されます -->
+            </div>
+        </section>
+    </div>
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="controller-container">
+        <header class="controller-header">
+            <h1>🎸 VirtuTune</h1>
+            <p class="subtitle">モバイルコントローラー</p>
+        </header>
+
+        <section class="connection-status">
+            <div class="status-indicator">
+                <div id="status-dot" class="status-dot"></div>
+                <span id="status-text" class="status-text">未接続</span>
+            </div>
+            <div id="connection-message" class="message info">
+                セッションID: <strong>{{ session_id }}</strong>
+            </div>
+        </section>
+
+        <section class="chord-section" id="chord-section">
+            <h2>コードを選択</h2>
+            <p class="section-hint">タップしてコードを変更</p>
+
+            <div class="chord-buttons">
+                <button class="chord-btn" data-chord="C">
+                    <span class="chord-name">C</span>
+                    <span class="chord-hint">メジャー</span>
+                </button>
+                <button class="chord-btn" data-chord="G">
+                    <span class="chord-name">G</span>
                     <span class="chord-hint">メジャー</span>
                 </button>
                 <button class="chord-btn" data-chord="D">
                     <span class="chord-name">D</span>
                     <span class="chord-hint">メジャー</span>
                 </button>
-                <button class="chord-btn" data-chord="E">
-                    <span class="chord-name">E</span>
-                    <span class="chord-hint">メジャー</span>
-                </button>
-                <button class="chord-btn" data-chord="Em">
-                    <span class="chord-name">Em</span>
+                <button class="chord-btn" data-chord="Am">
+                    <span class="chord-name">Am</span>
                     <span class="chord-hint">マイナー</span>
-                </button>
-                <button class="chord-btn" data-chord="A">
-                    <span class="chord-name">A</span>
-                    <span class="chord-hint">メジャー</span>
                 </button>
             </div>
 
             <div class="current-chord">
                 <span class="current-chord-label">現在のコード:</span>
                 <span id="current-chord-display" class="current-chord-name">-</span>
+            </div>
+        </section>
+
+        <!-- フレットボードセクション -->
+        <section class="fretboard-section">
+            <h2>フレットボード</h2>
+            <p class="section-hint">弦とフレットをタップして指を配置</p>
+
+            <div class="fretboard-grid" id="fretboard-grid">
+                <!-- 弦とフレットが動的に生成されます -->
             </div>
         </section>
     </div>
@@ -338,19 +550,103 @@
 
                     // PCに送信（簡易版）
                     sendChordChange(chord);
-                });
-            });
+                 });
+         })();
 
-            // コード変更を送信
-            function sendChordChange(chord) {
-                // WebSocketやポーリングでPCに送信
-                console.log('Chord change:', chord, 'Session:', sessionId);
+             // コード変更を送信
+             function sendChordChange(chord) {
+                 // WebSocketやポーリングでPCに送信
+                 console.log('Chord change:', chord, 'Session:', sessionId);
 
-                // 接続状態を更新
-                statusDot.classList.add('connected');
-                statusText.textContent = '接続中';
-            }
-        })();
+                 // コードのフレット位置を計算（簡易版）
+                 const chordPatterns = {
+                     'C': [0, 1, 0, 2, 3, 0],
+                     'G': [3, 0, 0, 0, 2, 3],
+                     'Am': [0, 1, 2, 2, 0, 0],
+                     'F': [1, 1, 2, 3, 2, 1, 1],
+                     'D': [2, 3, 2, 0, 0, 0],
+                     'E': [0, 0, 1, 2, 2, 0],
+                     'A': [0, 0, 2, 2, 3, 0],
+                     'Em': [0, 2, 2, 3, 2, 2]
+                 };
+                 const positions = chordPatterns[chord] || [];
+
+                 // フレットボードを更新
+                 updateFretboard(positions);
+
+                 // PCに送信
+                 sendChordChange(chord);
+
+                 // 接続状態を更新
+                 statusDot.classList.add('connected');
+                 statusText.textContent = '接続中';
+             }
+
+             // フレットボードを動的に生成
+             function updateFretboard(positions) {
+                 const grid = document.getElementById('fretboard-grid');
+                 grid.innerHTML = '';
+
+                 // 弦名
+                 const stringNames = ['E', 'A', 'D', 'G', 'B', 'E'];
+                 const stringNamesFret = ['6弦', '5弦', '4弦', '3弦', '2弦', '1弦'];
+
+                 // 各弦の行を生成
+                 stringNames.forEach((name, sIdx) => {
+                     const row = document.createElement('div');
+                     row.className = 'string-row';
+                     row.innerHTML = `<span class="string-label-fretboard">${stringNamesFret[sIdx]}</span>`;
+
+                     // 弦上のフレットエリア
+                     const openStringZone = document.createElement('div');
+                     openStringZone.className = 'fret-zone';
+                     openStringZone.setAttribute('data-string', sIdx);
+                     openStringZone.setAttribute('data-fret', '0');
+                     openStringZone.onclick = () => handleFretTouch(sIdx, 0);
+                     row.appendChild(openStringZone);
+
+                     // 各フレットのエリア
+                     for (let fIdx = 1; fIdx <= 4; fIdx++) {
+                         const fretZone = document.createElement('div');
+                         fretZone.className = 'fret-zone';
+                         fretZone.setAttribute('data-string', sIdx);
+                         fretZone.setAttribute('data-fret', fIdx);
+                         fretZone.onclick = () => handleFretTouch(sIdx, fIdx);
+
+                         // フレット番号を表示
+                         fretZone.innerHTML = `<span class="fret-number">${fIdx}</span>`;
+
+                         row.appendChild(fretZone);
+                     }
+
+                 grid.appendChild(row);
+                 });
+
+             // クイックコードショートカットイベント
+             const shortcutButtons = document.querySelectorAll('.chord-shortcut-btn');
+             shortcutButtons.forEach(btn => {
+                 btn.addEventListener('click', function() {
+                     const chord = this.getAttribute('data-chord');
+                     
+                     // アクティブクラスを切り替え
+                     shortcutButtons.forEach(b => b.classList.remove('active'));
+                     this.classList.add('active');
+
+                     // フレットボードを更新
+                     const chordPatterns = {
+                         'C': [0, 1, 0, 2, 3, 0],
+                         'G': [3, 0, 0, 0, 2, 3],
+                         'D': [2, 3, 2, 0, 0, 0],
+                         'Am': [0, 1, 2, 2, 0, 0]
+                     };
+                     const positions = chordPatterns[chord] || [];
+                     updateFretboard(positions);
+
+                     // PCに送信
+                     sendChordChange(chord);
+                 });
+             });
+         })();
     </script>
 </body>
 </html>

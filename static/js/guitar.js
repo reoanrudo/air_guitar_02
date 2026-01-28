@@ -16,17 +16,12 @@
     let comboCount = 0;
     let totalScore = 0;
     let audioInitialized = false;
-    let guitarSynths = [];
+    
+    // 音声エンジン（AudioEngine）
+    const audioEngine = null;
 
-    // 弦の周波数（標準チューニング）
-    const stringFrequencies = {
-        '6': 82.41,   // E2
-        '5': 110.00,  // A2
-        '4': 146.83,  // D2
-        '3': 196.00,  // G2
-        '2': 246.94,  // B2
-        '1': 329.63   // E3 (e1の1オクターブ上)
-    };
+    // パーティクルシステム
+    const particleSystem = null;
 
     /**
      * ページ読み込み時の初期化
@@ -35,6 +30,9 @@
         initializeGuitar();
         initializeChordSelector();
         initializePracticeControls();
+        initializeAudioSettings();
+        initializeParticleSystem();
+        initializeLeftHandFretboard();
     });
 
     /**
@@ -44,39 +42,71 @@
         if (audioInitialized) return;
 
         try {
-            await Tone.start();
-            console.log('Tone.js initialized');
-
-            // 各弦のシンセサイザーを作成（リアルなギター音）
-            for (let i = 1; i <= 6; i++) {
-                const synth = new Tone.Sampler({
-                    urls: {
-                        C3: "C3.mp3",
-                        "D#3": "Ds3.mp3",
-                        "F#3": "Fs3.mp3",
-                        A3: "A3.mp3",
-                    },
-                    release: 1,
-                    baseUrl: "https://tonejs.github.io/audio/kerero/",
-                    onload: () => {
-                        console.log(`String ${i} sampler loaded`);
-                    }
-                }).toDestination();
-
-                // フィードバックとディストーションを追加してギター音に近づける
-                const feedback = new Tone.FeedbackDelay("8n.", 0.3, 0.5).toDestination();
-                const distortion = new Tone.Distortion(0.2).toDestination();
-                synth.connect(distortion);
-                synth.connect(feedback);
-
-                guitarSynths[i] = synth;
-            }
-
+            // AudioEngine を初期化（新しい FM シンセサイザー）
+            console.log('Audio Engine initializing...');
+            audioEngine = new AudioEngine();
+            
+            // デフォルトはFMシンセサイザーーモード（高品質）
+            await audioEngine.start();
+            
             audioInitialized = true;
-            showNotification('オーディオ準備完了！弦をクリックして音を鳴らしてみましょう！');
+            console.log('Audio Engine ready:', audioEngine);
+            
+            // 音声設定 UI から AudioEngine を設定
+            updateAudioEngineSettings();
+            
+            showNotification('オーディオ準備完了！FMシンセサイザーで高品質ギター音');
         } catch (error) {
             console.error('Failed to initialize audio:', error);
             showNotification('オーディオの初期化に失敗しました。ページをリロードしてください。');
+        }
+    }
+
+    /**
+     * 音声設定を Audio Engine に転送
+     */
+    function updateAudioEngineSettings() {
+        if (!audioEngine) return;
+
+        // 音声モードボタンのクリックイベントを監視
+        const modeButtons = document.querySelectorAll('.audio-mode-btn');
+        const volumeSlider = document.getElementById('audio-volume');
+        const volumeValue = document.querySelector('.volume-value');
+
+        if (modeButtons.length === 0 || !volumeSlider || !volumeValue) {
+            console.warn('Audio settings UI elements not found');
+            return;
+        }
+
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const mode = this.dataset.mode;
+                if (!audioInitialized) {
+                    initializeAudio();
+                }
+
+                audioEngine.setAudioMode(mode);
+
+                modeButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                console.log(`Audio mode changed to: ${mode}`);
+            });
+        });
+
+        // 音量スライダーのリアルタイム更新
+        if (volumeSlider && volumeValue) {
+            volumeSlider.addEventListener('input', function() {
+                const value = this.value;
+                volumeValue.textContent = `${value}%`;
+
+                if (audioInitialized) {
+                    audioEngine.setVolume(value / 100);
+                }
+
+                // リアルタイムで音量を変更（即時反映なし）
+                audioEngine.mainGain.gain.rampTo(value / 50, 0.1);
+            });
         }
     }
 
@@ -140,15 +170,51 @@
         calculateScore();
     }
 
-    /**
-     * 弦にグロー効果を追加
-     * @param {HTMLElement} stringElement - 弦の要素
-     */
-    function addStringGlow(stringElement) {
-        stringElement.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
-        setTimeout(() => {
-            stringElement.style.boxShadow = '';
-        }, 200);
+        /**
+     * フィードバックを表示（ヒットゾーンではなく、弦の位置に表示）
+         * @param {HTMLElement} stringElement - 弦の要素
+         */
+        function showNoteFeedbackEffect(stringElement) {
+        // 弦の位置を取得
+        const rect = stringElement.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+
+        // ランダムに品質を決定（デモ用）
+        const qualities = ['perfect', 'great', 'good', 'miss'];
+        const weights = [0.2, 0.3, 0.3, 0.2];
+
+        const random = Math.random();
+        let quality = 'good';
+        let cumulative = 0;
+
+        for (let i = 0; i < weights.length; i++) {
+            cumulative += weights[i];
+            if (random <= cumulative) {
+                quality = qualities[i];
+                break;
+            }
+        }
+
+        // フィードバックを表示（ヒットゾーンではなく、弦の位置に表示）
+        showNoteFeedback(quality, x, y);
+
+        // パーティクルを生成
+        if (particleSystem) {
+            if (quality === 'perfect') {
+                particleSystem.spawnHitParticles(x, y);
+            } else if (quality === 'great') {
+                particleSystem.spawnHitParticles(x, y);
+            }
+        }
+
+        // 左手モード：単音
+        const leftChord = getCurrentChordName();
+
+        // 左手コードボードのフレット位置を更新
+        if (leftChord && leftChord !== '-') {
+            updateFretboardPositions(leftChord);
+        }
     }
 
     /**
@@ -224,8 +290,14 @@
                 const stringElement = document.querySelector(`.string[data-note*="${note.charAt(0)}"]`);
                 if (stringElement) {
                     const stringNumber = stringElement.dataset.string;
-                    playString(stringNumber, note, stringElement);
+                     playString(stringNumber, note, stringElement);
                     animateString(stringElement);
+
+                    // パーティクルを生成
+                    if (particleSystem) {
+                        const rect = stringElement.getBoundingClientRect();
+                        particleSystem.spawnHitParticles(rect.left + rect.width / 2, rect.top);
+                    }
                 }
             }, index * 50); // 50msずつずらしてストローク感を出す
         });
@@ -329,6 +401,54 @@
     }
 
     /**
+     * 音声設定の初期化
+     */
+    function initializeAudioSettings() {
+        const modeButtons = document.querySelectorAll('.audio-mode-btn');
+        const volumeSlider = document.getElementById('audio-volume');
+        const volumeValue = document.querySelector('.volume-value');
+
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const mode = this.dataset.mode;
+
+                if (!audioInitialized) {
+                    await initializeAudio();
+                }
+
+                audioEngine.setAudioMode(mode);
+
+                modeButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                console.log(`Audio mode changed to: ${mode}`);
+            });
+        });
+
+        volumeSlider.addEventListener('input', function() {
+            const value = this.value;
+            volumeValue.textContent = `${value}%`;
+            audioEngine.setVolume(value / 100);
+
+            if (audioInitialized) {
+                audioEngine.mainGain.gain.rampTo(value / 50, 0.1);
+            }
+        });
+    }
+
+    /**
+     * パーティクルシステムの初期化
+     */
+    function initializeParticleSystem() {
+        const canvas = document.getElementById('particle-canvas');
+        if (canvas && window.ParticleSystem) {
+            particleSystem = new ParticleSystem();
+            particleSystem.initializeCanvas(canvas);
+            particleSystem.start();
+        }
+    }
+
+    /**
      * 練習コントロールの初期化
      */
     function initializePracticeControls() {
@@ -395,13 +515,287 @@
         showNotification(`練習完了！${Math.floor(duration / 60)}分${duration % 60}秒の練習、お疲れ様でした！`);
     }
 
+    // コンボカウンターのアニメーション
+    function animateCombo(combo) {
+        const comboCounter = document.querySelector('.combo-counter');
+        if (!comboCounter) return;
+
+        // コンボクラスを追加/削除してアニメーション
+        comboCounter.classList.remove('combo-animation');
+        
+        // アニメーションを再トリガー
+        void comboCounter.offsetWidth;
+        comboCounter.classList.add('combo-animation');
+    }
+
     /**
-     * タイマーを更新する
+     * 左手コードボードの初期化
      */
-    function updateTimer() {
-        if (!practiceStartTime) {
-            return;
+    function initializeLeftHandFretboard() {
+        const grid = document.getElementById('left-hand-fretboard-grid');
+        if (!grid) return;
+
+        // モードセレクターを取得
+        const modePcBtn = document.getElementById('mode-pc');
+        const modeMobileBtn = document.getElementById('mode-mobile');
+
+        // 弦名とフレット数
+        const stringNames = ['E', 'A', 'D', 'G', 'B', 'E'];
+        const fretCount = 4;
+
+        // 各弦の行を生成
+        stringNames.forEach((name, stringIdx) => {
+            const row = document.createElement('div');
+            row.className = 'string-row';
+            row.innerHTML = `<span class="string-label-fretboard">${stringNames[stringIdx]}弦</span>`;
+
+            // 弦上の開弦エリア（ミュート状態）
+            const openStringZone = document.createElement('div');
+            openStringZone.className = 'fret-zone';
+            openStringZone.setAttribute('data-string', stringIdx);
+            openStringZone.setAttribute('data-fret', '0');
+            openStringZone.onclick = () => handleFretTouch(stringIdx, 0);
+            row.appendChild(openStringZone);
+
+            // 各フレットのゾーン
+            for (let fretIdx = 1; fretIdx <= fretCount; fretIdx++) {
+                const fretZone = document.createElement('div');
+                fretZone.className = 'fret-zone';
+                fretZone.setAttribute('data-string', stringIdx);
+                fretZone.setAttribute('data-fret', fretIdx);
+                fretZone.onclick = () => handleFretTouch(stringIdx, fretIdx);
+                fretZone.innerHTML = `<span class="fret-number">${fretIdx}</span>`;
+                row.appendChild(fretZone);
+            }
+
+            grid.appendChild(row);
+        });
+    }
+
+    /**
+     * モード切り替えイベント
+     */
+    if (modePcBtn && modeMobileBtn) {
+        modePcBtn.addEventListener('click', function() {
+            modePcBtn.classList.add('active');
+            modeMobileBtn.classList.remove('active');
+            currentHandMode = 'pc';
+            console.log('Mode switched to: PC操作');
+        });
+
+        modeMobileBtn.addEventListener('click', function() {
+            modePcBtn.classList.remove('active');
+            modeMobileBtn.classList.add('active');
+            currentHandMode = 'mobile';
+            console.log('Mode switched to: スマホ操作');
+        });
+    }
+
+            grid.appendChild(row);
+        });
+    }
+
+    /**
+     * 左手コードボードの初期化（簡易版）
+     */
+    function initializeLeftHandFretboard() {
+        const grid = document.getElementById('left-hand-fretboard-grid');
+        if (!grid) return;
+
+        // 弦名とフレット数
+        const stringNames = ['E', 'A', 'D', 'G', 'B', 'E'];
+        const fretCount = 4;
+
+        // 各弦の行を生成
+        stringNames.forEach((name, stringIdx) => {
+            const row = document.createElement('div');
+            row.className = 'string-row';
+            row.innerHTML = `<span class="string-label-fretboard">${stringNames[stringIdx]}弦</span>`;
+
+            // 開弦（左手でミュートする弦）
+            const openStringZone = document.createElement('div');
+            openStringZone.className = 'fret-zone';
+            openStringZone.setAttribute('data-string', stringIdx);
+            openStringZone.setAttribute('data-fret', '0');
+            openStringZone.onclick = () => handleFretTouch(stringIdx, 0);
+            row.appendChild(openStringZone);
+
+            // 各フレットのゾーン
+            for (let fretIdx = 1; fretIdx <= fretCount; fretIdx++) {
+                const fretZone = document.createElement('div');
+                fretZone.className = 'fret-zone';
+                fretZone.setAttribute('data-string', stringIdx);
+                fretZone.setAttribute('data-fret', fretIdx);
+                fretZone.onclick = () => handleFretTouch(stringIdx, fretIdx);
+                fretZone.innerHTML = `<span class="fret-number">${fretIdx}</span>`;
+                row.appendChild(fretZone);
+            }
+
+            grid.appendChild(row);
+        });
+    }
+
+            grid.appendChild(row);
+        });
+    }
+
+    /**
+     * 左手コードボードの初期化（簡易版）
+     */
+    function initSimpleLeftHandFretboard() {
+        const grid = document.getElementById('left-hand-fretboard-grid');
+        if (!grid) return;
+
+        const stringNames = ['E', 'A', 'D', 'G', 'B', 'E'];
+        const fretCount = 4;
+
+        stringNames.forEach((name, stringIdx) => {
+            const row = document.createElement('div');
+            row.className = 'string-row';
+            row.innerHTML = `<span class="string-label-fretboard">${stringNames[stringIdx]}弦</span>`;
+
+            // 弦上の開弦エリア（ミュートする弦）
+            const openStringZone = document.createElement('div');
+            openStringZone.className = 'fret-zone';
+            openStringZone.setAttribute('data-string', stringIdx);
+            openStringZone.setAttribute('data-fret', '0');
+            openStringZone.onclick = () => handleFretTouch(stringIdx, 0);
+            row.appendChild(openStringZone);
+
+            for (let fretIdx = 1; fretIdx <= fretCount; fretIdx++) {
+                const fretZone = document.createElement('div');
+                fretZone.className = 'fret-zone';
+                fretZone.setAttribute('data-string', stringIdx);
+                fretZone.setAttribute('data-fret', fretIdx);
+                fretZone.onclick = () => handleFretTouch(stringIdx, fretIdx);
+                fretZone.innerHTML = `<span class="fret-number">${fretIdx}</span>`;
+                row.appendChild(fretZone);
+            }
+
+            grid.appendChild(row);
+        });
+    }
+
+    /**
+     * フレットタッチイベント（左手コードボード用）
+     */
+    function handleFretTouch(stringIdx, fret) {
+        if (!audioInitialized) {
+            initializeAudio();
         }
+
+        // タッチ振動フィードバック
+        if (window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+        }
+
+        // 弦を鳴らす（左手用：単音）
+        const fretStates = new Array(6).fill(0);
+        fretStates[stringIdx] = fret;
+
+        // PCに送信（左手用コードイベント）
+        const chordData = {
+            name: getCurrentChordName() || '-',
+            position: 'left_hand'
+        };
+
+        if (audioEngine) {
+            audioEngine.playStrum(fretStates, 'down');
+        }
+
+        // パーティクルを生成
+        if (particleSystem) {
+            const rect = touchedZone.getBoundingClientRect();
+            particleSystem.spawnStrumParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+    }
+
+        // タッチ振動フィードバック
+        if (window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+        }
+
+        // アクティブ状態を更新
+        const allZones = document.querySelectorAll(`[data-string="${stringIdx}"]`);
+        allZones.forEach(zone => {
+            if (zone.classList.contains('active')) {
+                zone.classList.remove('active');
+            }
+        });
+
+        const touchedZone = document.querySelector(`[data-string="${stringIdx}"][data-fret="${fret}"]`);
+        if (touchedZone) {
+            touchedZone.classList.add('active');
+        }
+
+        // 弦を鳴らす（左手用：単音）
+        const fretStates = new Array(6).fill(0);
+        fretStates[stringIdx] = fret;
+
+        // PCに送信（左手用コードイベント）
+        const chordData = {
+            name: getCurrentChordName() || '-',
+            position: 'left_hand'
+        };
+
+        if (audioEngine) {
+            audioEngine.playStrum(fretStates, 'down');
+        }
+
+        // WebSocketでPCに送信
+        sendWebSocketMessage('chord_change', chordData);
+
+        // パーティクルを生成
+        if (particleSystem) {
+            const rect = touchedZone.getBoundingClientRect();
+            particleSystem.spawnStrumParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+    }
+
+            grid.appendChild(row);
+        });
+    }
+
+    /**
+     * フレットタッチ/クリックイベント
+     */
+    function handleFretTouch(stringIdx, fret) {
+        if (!audioInitialized) {
+            initializeAudio();
+        }
+
+        // タッチ振動フィードバック
+        if (window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+        }
+
+        // アクティブ状態を更新
+        const allZones = document.querySelectorAll(`[data-string="${stringIdx}"]`);
+        allZones.forEach(zone => {
+            if (zone.classList.contains('active')) {
+                zone.classList.remove('active');
+            }
+        });
+
+        const touchedZone = document.querySelector(`[data-string="${stringIdx}"][data-fret="${fret}"]`);
+        if (touchedZone) {
+            touchedZone.classList.add('active');
+        }
+
+        // 弦を鳴らす（左手用：単音）
+        const fretStates = new Array(6).fill(0);
+        fretStates[stringIdx] = fret;
+
+        if (audioEngine) {
+            audioEngine.playStrum(fretStates, 'down');
+        }
+
+        // パーティクルを生成
+        if (particleSystem) {
+            const rect = touchedZone.getBoundingClientRect();
+            particleSystem.spawnStrumParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+    }
 
         const currentTime = new Date();
         const elapsed = Math.floor((currentTime - practiceStartTime) / 1000);
@@ -415,34 +809,91 @@
             String(seconds).padStart(2, '0');
     }
 
-    /**
-     * ノートフィードバックエフェクトを表示
-     * @param {HTMLElement} stringElement - 弦の要素
+        /**
+     * フレットボード位置の更新（左手コード用）
+     * @param {string} chordName - コード名
      */
-    function showNoteFeedbackEffect(stringElement) {
-        // 弦の位置を取得
-        const rect = stringElement.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top;
+    function updateFretboardPositions(chordName) {
+        // 左手コードの位置定義（Air Guitar Pro から採用）
+        const chordPatterns = {
+            'C': [0, 1, 0, 2, 3, 0],
+            'G': [3, 0, 0, 0, 2, 3],
+            'D': [2, 3, 2, 0, 0, 0, 2],
+            'Am': [0, 1, 2, 2, 0, 0, 0],
+            'F': [1, 1, 2, 0, 0, 0, 0],
+            'E': [0, 1, 2, 0, 0, 0, 0],
+            'A': [0, 0, 1, 2, 0, 0, 0],
+            'Em': [0, 2, 2, 0, 0, 0, 2]
+        };
 
-        // ランダムに品質を決定（デモ用）
-        const qualities = ['perfect', 'great', 'good', 'miss'];
-        const weights = [0.2, 0.3, 0.3, 0.2]; // 良い判定を多くする
+        const positions = chordPatterns[chordName] || [];
 
-        const random = Math.random();
-        let quality = 'good';
-        let cumulative = 0;
+        document.querySelectorAll('.finger-marker').forEach(marker => {
+            const posParts = marker.dataset.pos.split(',');
+            const stringIdx = parseInt(marker.dataset.string);
+            const fret = parseInt(marker.dataset.fret);
+            const finger = marker.innerHTML;
 
-        for (let i = 0; i < weights.length; i++) {
-            cumulative += weights[i];
-            if (random <= cumulative) {
-                quality = qualities[i];
-                break;
+            // 既存のフォーマット（"string,fret"）を維持
+            const existingPositions = positions[finger] || new Set();
+
+            // 新しい位置を設定
+            existingPositions.add(`${stringIdx},${fret}`);
+
+            marker.innerHTML = finger;
+        });
+
+        return positions;
+    }
+        }
+
+        // フィードバックを表示（ヒットゾーンではなく、弦の位置に表示）
+        showNoteFeedback(quality, x, y);
+
+        // パーティクルを生成
+        if (particleSystem) {
+            if (quality === 'perfect') {
+                particleSystem.spawnHitParticles(x, y);
+            } else if (quality === 'great') {
+                particleSystem.spawnHitParticles(x, y);
             }
         }
 
-        // フィードバックを表示
+        // 弦の発光エフェクトを追加
+        if (stringElement) {
+            stringElement.classList.add('strummed');
+            setTimeout(() => {
+                stringElement.classList.remove('strummed');
+            }, 200);
+        }
+    }
+        }
+
+        // フィードバックを表示（ヒットゾーンではなく、弦の位置に表示）
         showNoteFeedback(quality, x, y);
+
+        // パーティクルを生成
+        if (particleSystem) {
+            if (quality === 'perfect') {
+                particleSystem.spawnHitParticles(x, y);
+            } else if (quality === 'great') {
+                particleSystem.spawnHitParticles(x, y);
+            }
+        }
+    }
+        }
+
+         // フィードバックを表示
+         showNoteFeedback(quality, x, y);
+
+        // パーティクルを生成
+        if (particleSystem) {
+            if (quality === 'perfect') {
+                particleSystem.spawnHitParticles(x, y);
+            } else if (quality === 'great') {
+                particleSystem.spawnHitParticles(x, y);
+            }
+        }
     }
 
     /**
@@ -468,38 +919,28 @@
         feedback.style.cssText = `
             position: fixed;
             left: ${x}px;
-            top: ${y - 50}px;
+            top: ${y}px;
             transform: translateX(-50%);
             padding: 10px 20px;
             border-radius: 20px;
             font-weight: bold;
             font-size: 16px;
             z-index: 1000;
-            animation: feedbackPopup 1s ease-out forwards;
         `;
-
-        // 品質によって色を変える
-        const colors = {
-            'perfect': '#FFD700',
-            'great': '#C0C0C0',
-            'good': '#CD7F32',
-            'miss': '#FF6B6B'
-        };
-        feedback.style.backgroundColor = colors[quality] || '#333';
-        feedback.style.color = quality === 'perfect' || quality === 'great' ? '#000' : '#fff';
 
         document.body.appendChild(feedback);
 
+        // 適切なタイミングで削除
+        const duration = quality === 'perfect' ? 3000 : 500;
         setTimeout(() => {
             feedback.remove();
-        }, 1000);
+        }, duration);
     }
 
     /**
      * スコアを計算
      */
     function calculateScore() {
-        // ランダムにスコアを決定（デモ用）
         const scores = [100, 75, 50, 0];
         const weights = [0.2, 0.3, 0.3, 0.2];
 
@@ -522,9 +963,131 @@
 
             // スコアポップアップを表示
             showScorePopup(score);
+
+            // コンボカウンターのアニメーションを追加
+            animateCombo(comboCount);
+
+            // コンボマイルストーン時のパーティクル
+            if (comboCount > 0 && comboCount % 5 === 0) {
+                const comboDisplay = document.querySelector('.combo-counter');
+                if (comboDisplay) {
+                    const rect = comboDisplay.getBoundingClientRect();
+                    if (particleSystem) {
+                        particleSystem.spawnComboParticles(rect.left + rect.width / 2, rect.top, comboCount);
+                    }
+                }
+            }
         } else {
             comboCount = 0;
         }
+    }
+
+    /**
+     * フレットボード位置の更新
+     * @param {string} chordName - コード名
+     */
+    function updateFretboardPositions(chordName) {
+        const fingerMarkers = {
+            'C': [
+                { string: 3, fret: 0, finger: 2 },
+                { string: 2, fret: 0, finger: 1 },
+                { string: 4, fret: 0, finger: 1 },
+                { string: 5, fret: 2, finger: 3 }
+            ],
+            'G': [
+                { string: 6, fret: 3, finger: 2 },
+                { string: 5, fret: 3, finger: 3 },
+                { string: 6, fret: 2, finger: 4 },
+                { string: 5, fret: 2, finger: 4 }
+            ],
+            'D': [
+                { string: 4, fret: 1, finger: 1 },
+                { string: 3, fret: 2, finger: 2 },
+                { string: 4, fret: 3, finger: 2 },
+                { string: 5, fret: 1, finger: 3 }
+            ],
+            'Am': [
+                { string: 0, fret: 2, finger: 2 },
+                { string: 1, fret: 1, finger: 1 },
+                { string: 2, fret: 2, finger: 2 },
+                { string: 3, fret: 2, finger: 2 }
+            ],
+            'F': [
+                { string: 1, fret: 0, finger: 1 },
+                { string: 2, fret: 0, finger: 2 },
+                { string: 3, fret: 0, finger: 2 },
+                { string: 4, fret: 0, finger: 3 },
+                { string: 5, fret: 1, finger: 3 }
+            ],
+            'E': [
+                { string: 4, fret: 1, finger: 1 },
+                { string: 5, fret: 1, finger: 1 },
+                { string: 6, fret: 1, finger: 1 }
+            ],
+            'Em': [
+                { string: 0, fret: 2, finger: 1 },
+                { string: 1, fret: 2, finger: 2 },
+                { string: 2, fret: 2, finger: 2 }
+            ],
+            '-': [
+                { string: 1, fret: 0, finger: 0 }
+            ]
+        };
+
+        const positions = fingerMarkers[chordName] || [];
+
+        document.querySelectorAll('.finger-marker').forEach(marker => {
+            marker.remove();
+        });
+
+        // フレットボードのマーカーを更新
+        document.querySelectorAll('.fret-zone').forEach(zone => {
+            zone.innerHTML = '';
+            positions.forEach(pos => {
+                if (pos.string === zone.dataset.string && pos.fret === zone.dataset.fret) {
+                    zone.innerHTML = `<span class="finger-marker">${pos.finger}</span>`;
+                }
+            });
+    }
+
+        const popup = document.createElement('div');
+        popup.className = 'score-popup';
+        popup.textContent = `+${score}`;
+        popup.style.cssText = `
+            position: fixed;
+            left: 50%;
+            top: 40%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            z-index: 1000;
+            animation: score-popup-animation 0.8s ease-out forwards;
+        `;
+
+        document.body.appendChild(popup);
+
+        // アニメーション完了後に削除
+        setTimeout(() => {
+            popup.remove();
+        }, 800);
+    }
+
+    /**
+     * コンボカウンターのアニメーション
+     * @param {number} combo - コンボ数
+     */
+    function animateCombo(combo) {
+        const comboCounter = document.querySelector('.combo-counter');
+        if (!comboCounter) return;
+
+        // コンボクラスを追加/削除してアニメーション
+        comboCounter.classList.remove('combo-animation');
+        
+        // アニメーションを再トリガー
+        void comboCounter.offsetWidth;
+        comboCounter.classList.add('combo-animation');
     }
 
     /**

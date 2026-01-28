@@ -131,6 +131,32 @@ body {
 
 .string.vibrating {
     animation: vibrate 0.1s linear 3;
+    box-shadow: 0 0 20px #ffd700;
+}
+
+/* 弦がストロークされた時のエフェクト */
+.string.strummed {
+    animation: strum-flash 0.2s ease;
+}
+
+@keyframes strum-flash {
+    0%, 100% {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.6);
+    }
+}
+    25% {
+        transform: translateY(-3px);
+    }
+    75% {
+        transform: translateY(3px);
+    }
+}
+
+.string.vibrating {
+    animation: vibrate 0.1s linear 3;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
 }
 
@@ -703,29 +729,106 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* ============================================
+    ビジュアルフィードバック
+    ============================================ */
+
 /* ノートフィードバック */
 .note-feedback {
     position: fixed;
     font-size: 2em;
     font-weight: bold;
     pointer-events: none;
-    animation: note-feedback-animation 1s ease-out forwards;
     z-index: 1000;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-@keyframes note-feedback-animation {
+/* PERFECT フィードバック */
+.note-feedback.feedback-perfect {
+    color: #FFD700;
+    animation: perfect-feedback 3s ease-out forwards;
+}
+
+@keyframes perfect-feedback {
     0% {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
     50% {
         opacity: 1;
-        transform: translateY(-30px) scale(1.2);
+        transform: translateY(-30px) scale(1.5);
+        text-shadow: 0 0 30px #FFD700;
     }
     100% {
         opacity: 0;
         transform: translateY(-60px) scale(1);
+    }
+}
+
+/* GREAT フィードバック */
+.note-feedback.feedback-great {
+    color: #38bdf8;
+    animation: great-feedback 0.5s ease-out forwards;
+}
+
+@keyframes great-feedback {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-20px) scale(1.3);
+        text-shadow: 0 0 20px #38bdf8;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-40px) scale(1);
+    }
+}
+
+/* GOOD フィードバック */
+.note-feedback.feedback-good {
+    color: #60a5fa;
+    animation: good-feedback 0.5s ease-out forwards;
+}
+
+@keyframes good-feedback {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-15px) scale(1.2);
+        text-shadow: 0 0 15px #60a5fa;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(1);
+    }
+}
+
+/* MISS フィードバック */
+.note-feedback.feedback-miss {
+    color: #ef4444;
+    animation: miss-feedback 0.5s ease-out forwards;
+    font-weight: 900;
+}
+
+@keyframes miss-feedback {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.1);
+        text-shadow: 0 0 10px #ef4444;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20px) scale(1);
     }
 }
 
@@ -1023,7 +1126,280 @@ body {
     box-shadow: 0 0 20px #ffd700;
 }
 
+/* 弦の振動アニメーション */
+@keyframes vibrate {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-3px);
+    }
+    75% {
+        transform: translateY(3px);
+    }
+}
+
+.string.vibrating {
+    animation: vibrate 0.1s linear 3;
+    box-shadow: 0 0 20px #ffd700;
+}
+
+/* 弦のグローエフェクト */
+.string.glowing {
+    box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+    animation: glow-fade 0.5s ease-out;
+}
+
+@keyframes glow-fade {
+    0% {
+        box-shadow: 0 0 40px #00ff00, 0 0 80px #00ff00;
+    }
+    100% {
+        box-shadow: none;
+    }
+}
+
+/* 弦がストロークされた時のエフェクト */
+.string.strummed {
+    animation: strum-flash 0.2s ease;
+}
+
+@keyframes strum-flash {
+    0%, 100% {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.6);
+    }
+}
+
 /* パーフェクトヒットエフェクト */
+.perfect-hit {
+    animation: perfect-flash 0.3s ease-out;
+}
+
+@keyframes perfect-flash {
+    0%, 100% {
+        background: transparent;
+    }
+    50% {
+        background: rgba(255, 215, 0, 0.3);
+    }
+}
+
+/* パーフェクトヒットエフェクト */
+/* ============================================
+    音声設定
+    ============================================ */
+
+.audio-settings {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.audio-settings h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.setting-group {
+    margin-bottom: 15px;
+}
+
+.setting-label {
+    display: inline-block;
+    margin-right: 15px;
+    color: #718096;
+    font-weight: bold;
+}
+
+.setting-options {
+    display: flex;
+    gap: 10px;
+}
+
+.audio-mode-btn {
+    padding: 10px 20px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.audio-mode-btn.active {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.audio-mode-btn:hover:not(.active) {
+    background: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.volume-slider {
+    width: 150px;
+    height: 6px;
+    cursor: pointer;
+}
+
+.volume-value {
+    margin-left: 10px;
+    color: #667eea;
+    font-weight: bold;
+    min-width: 40px;
+}
+
+/* ============================================
+    パーティクルエフェクト用 Canvas
+    ============================================ */
+
+#particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* ============================================
+    左手コードボード（PC用）
+    ============================================ */
+
+.left-hand-fretboard {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.left-hand-fretboard h2 {
+    color: #667eea;
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.fretboard-hint {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+}
+
+.fretboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 4px;
+    padding: 10px;
+    background: #f5f7f5;
+    border-radius: 8px;
+    position: relative;
+    min-height: 200px;
+}
+
+.fret-label {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-weight: bold;
+    font-size: 0.75em;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.fret-zone {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.fret-zone:active {
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(0.98);
+}
+
+.fret-zone.active {
+    background: #f97316;
+    color: white;
+    font-weight: bold;
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+    z-index: 10;
+}
+
+.fret-zone.finger-pressed {
+    background: rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+    border: 2px solid #764ba2;
+}
+
+.string-label-fretboard {
+    position: absolute;
+    left: -25px;
+    width: 25px;
+    text-align: right;
+    font-weight: bold;
+    color: #764ba2;
+    font-size: 0.8em;
+    z-index: 5;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ============================================
+    モバイル対応 (320px - 767px)
+    ============================================ */
+
+@media (max-width: 767px) {
+    .left-hand-fretboard {
+        padding: 15px;
+        font-size: 0.9em;
+    }
+
+    .fretboard-grid {
+        gap: 3px;
+        padding: 8px;
+    }
+
+    .fret-zone {
+        font-size: 0.7em;
+    }
+
+    .string-label-fretboard {
+        font-size: 0.7em;
+        left: -20px;
+        width: 20px;
+    }
+}
+
+/* ============================================
+    ストリングプレイ時の強調表示
+    ============================================ */
+
 .perfect-hit {
     animation: perfect-flash 0.3s ease-out;
 }

@@ -45,107 +45,49 @@
                 </div>
             </div>
 
-            <!-- オーディオビジュアライザー -->
-            <canvas id="audio-visualizer"></canvas>
-        </div>
+        <!-- オーディオビジュアライザー -->
+        <canvas id="audio-visualizer"></canvas>
 
-        <!-- コードセレクター -->
-        <div class="chord-selector">
-            <h2>コードを選択</h2>
-            <div class="chord-buttons">
-                {% for chord in chords %}
-                <button class="chord-btn" data-chord="{{ chord.name }}">
-                    {{ chord.name }}
+        <!-- パーティクルエフェクト用 Canvas -->
+        <canvas id="particle-canvas"></canvas>
+
+        <!-- コンボカウンター -->
+        <div class="combo-counter" id="combo-counter">0</div>
+
+        <!-- 左手コードボードセクション -->
+        <div class="left-hand-fretboard" id="left-hand-fretboard">
+            <h2>左手コードボード</h2>
+            <p class="fretboard-hint">左手モードでコードを選択（カメラ認識別で自動切替え）</p>
+            <div class="mode-selector">
+                <button id="mode-pc" class="mode-btn active">
+                    <span class="mode-label">PC操作</span>
+                    <span class="mode-desc">右手でストローク</span>
                 </button>
-                {% endfor %}
+                <button id="mode-mobile" class="mode-btn">
+                    <span class="mode-label">スマホ操作</span>
+                    <span class="mode-desc">左手でコード入力</span>
+                </button>
             </div>
-            <div class="current-chord">
-                <span>現在のコード: </span>
-                <span id="current-chord-name" class="chord-name">-</span>
+
+            <div class="fretboard-grid" id="left-hand-fretboard-grid">
+                <!-- 左手コードボードが動的に生成されます -->
             </div>
         </div>
 
-        <!-- 練習コントロール -->
-        <div class="practice-controls">
-            <h2>練習セッション</h2>
-            <div class="timer-display">
-                <span class="timer" id="timer">00:00</span>
-            </div>
-            <div class="control-buttons">
-                <button id="start-practice" class="btn btn-primary">練習開始</button>
-                <button id="stop-practice" class="btn btn-secondary" disabled>練習終了</button>
-            </div>
-        </div>
-
-        <!-- カメラジェスチャー認識 -->
-        <div class="camera-gesture">
-            <h2>カメラでストローク</h2>
-            <div class="camera-controls">
-                <button id="enable-camera-btn" class="btn btn-primary">カメラを有効化</button>
-                <button id="disable-camera-btn" class="btn btn-secondary" disabled>カメラを無効化</button>
-            </div>
-            <div class="camera-status">
-                <div id="camera-indicator" class="camera-indicator">
-                    <span class="indicator-dot"></span>
-                    <span class="indicator-text">カメラ: オフ</span>
+        <!-- 音声設定 -->
+        <div class="audio-settings">
+            <h3>音声設定</h3>
+            <div class="setting-group">
+                <label class="setting-label">音声モード：</label>
+                <div class="setting-options">
+                    <button class="audio-mode-btn active" data-mode="fm">FMシンセ（高品質）</button>
+                    <button class="audio-mode-btn" data-mode="mp3">MP3（軽量）</button>
                 </div>
             </div>
-            <div class="camera-preview">
-                <video id="camera-video" class="camera-video" playsinline></video>
-            </div>
-            <div class="camera-instructions">
-                <p>カメラの前に手をかざし、下に動かしてストロークしてください</p>
-            </div>
-        </div>
-
-        <!-- モバイルペアリング -->
-        <div class="mobile-pairing">
-            <h2>スマートフォンで操作</h2>
-
-            <!-- URL表示 -->
-            <div class="ip-address-display" style="background: #f0f0f0; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
-                <h3 style="margin: 0 0 10px 0; color: #667eea;">📱 スマートフォンでアクセス</h3>
-                <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">
-                    以下のURLをスマートフォンのブラウザで入力してください：
-                </p>
-                <div id="ip-url-display" style="
-                    background: white;
-                    border: 2px solid #28a745;
-                    border-radius: 8px;
-                    padding: 15px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #28a745;
-                    margin: 10px 0;
-                    word-break: break-all;
-                    line-height: 1.6;
-                ">
-                    {{ mobile_controller_url }}
-                </div>
-                <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">
-                    ※ またはQRコードをスキャンしてください
-                </p>
-            </div>
-
-            <button id="show-qr-btn" class="btn btn-secondary">QRコードを表示</button>
-
-            <div id="qr-modal" class="qr-modal" style="display: none;">
-                <div class="qr-modal-content">
-                    <span class="qr-close">&times;</span>
-                    <h3>QRコードでペアリング</h3>
-                    <div class="qr-code-container">
-                        <img id="qr-code" data-session-id="{{ session_id }}" src="" alt="QRコード" />
-                        <p id="pairing-status" class="pairing-status">読み込み中...</p>
-                    </div>
-                    <div class="pairing-instructions">
-                        <ol>
-                            <li>スマートフォンでこのQRコードをスキャン</li>
-                            <li>表示されたURLにアクセス</li>
-                            <li>コントローラーが表示されます</li>
-                        </ol>
-                    </div>
-                    <button id="refresh-qr-btn" class="btn btn-secondary">QRコードを更新</button>
-                </div>
+            <div class="setting-group">
+                <label class="setting-label">音量：</label>
+                <input type="range" id="audio-volume" min="0" max="100" value="85" class="volume-slider">
+                <span class="volume-value">85%</span>
             </div>
         </div>
     </main>
@@ -155,6 +97,10 @@
 {% block extra_js %}
 <!-- Tone.js for better guitar sounds -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<!-- Audio Engine for FM Synth -->
+<script src="{% static 'js/audio-engine.js' %}"></script>
+<!-- Particle System -->
+<script src="{% static 'js/particle-system.js' %}"></script>
 <!-- MediaPipe CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
