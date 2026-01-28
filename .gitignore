@@ -152,3 +152,12 @@ static/sounds/local/
 
 # Template reference
 claude-kiro-template/
+
+# Claude Code
+.claude/
+
+# o-m-cc runtime files
+spec/sisyphus-state.json
+spec/.completed-tasks
+spec/plan/logs/
+spec/plan/handoff.yaml
