@@ -26,5 +26,6 @@ urlpatterns = [
     path("game/", include("apps.game.urls")),
     path("ranking/", include("apps.ranking.urls")),
     path("mobile/", include("apps.mobile.urls")),
+    path("websocket/", include("apps.websocket.urls")),
     path("", include("apps.core.urls")),
 ]

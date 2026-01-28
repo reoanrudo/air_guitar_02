@@ -53,13 +53,15 @@ def get_env_var(
 SECRET_KEY = get_env_var(
     "SECRET_KEY", required=True, default="django-insecure-development-key-only"
 )
-DEBUG = get_env_var("DEBUG", default=True, cast=bool)
+DEBUG = True  # デバッグモードを有効にしてエラーの詳細を表示
 
 # DEBUGモードの場合はすべてのホストを許可
 if DEBUG:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
+    ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(
+        ","
+    )
 
 # セッション設定
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # ブラウザを閉じてもセッションを保持
@@ -142,9 +144,7 @@ if DATABASE_URL:
     # 本番環境
     import dj_database_url
 
-    DATABASES = {
-        "default": dj_database_url.parse(DATABASE_URL)
-    }
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
 else:
     # 開発環境
     DATABASES = {
@@ -191,8 +191,7 @@ LOGOUT_REDIRECT_URL = "users:login"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": (
-            "django.contrib.auth.password_validation."
-            "UserAttributeSimilarityValidator"
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
         ),
     },
     {
@@ -225,7 +224,7 @@ USE_TZ = True
 # =====================================================
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = ""  # 開発時はstaticfilesを使う
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]

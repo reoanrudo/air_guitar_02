@@ -142,6 +142,13 @@ class GameResultView(LoginRequiredMixin, TemplateView):
     """
 
     template_name = "game/game_result.html"
+    """
+    ゲーム結果ビュー
+
+    プレイ結果の統計情報を表示する
+    """
+
+    template_name = "game/game_result.html"
 
     def get_context_data(self, **kwargs):
         """
