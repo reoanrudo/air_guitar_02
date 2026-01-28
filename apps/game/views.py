@@ -10,6 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView
 from django.shortcuts import get_object_or_404
 
 from .models import Song, GameSession
@@ -91,6 +92,46 @@ class GamePlayView(LoginRequiredMixin, TemplateView):
         context["notes_json"] = json.dumps(song.notes)
 
         return context
+
+
+class GameResultView(LoginRequiredMixin, TemplateView):
+    """
+    ゲーム結果ビュー
+
+    プレイ結果の統計情報を表示する
+    """
+
+    template_name = "game/game_result.html"
+
+
+class AirGuitarProLobbyView(TemplateView):
+    """
+    Air Guitar Pro - ロビービュー
+
+    ルームコード選択画面を表示する
+    """
+
+    template_name = "game/air_guitar_pro_lobby.html"
+
+
+class AirGuitarProPCView(TemplateView):
+    """
+    Air Guitar Pro - PCプレイヤービュー
+
+    カメラを使ったリズムゲーム画面を表示する
+    """
+
+    template_name = "game/air_guitar_pro_pc.html"
+
+
+class AirGuitarProMobileView(TemplateView):
+    """
+    Air Guitar Pro - モバイルコントローラービュー
+
+    スマホ用コントローラー画面を表示する
+    """
+
+    template_name = "game/air_guitar_pro_mobile.html"
 
 
 class GameResultView(LoginRequiredMixin, TemplateView):

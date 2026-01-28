@@ -161,3 +161,6 @@ spec/sisyphus-state.json
 spec/.completed-tasks
 spec/plan/logs/
 spec/plan/handoff.yaml
+
+# Spec plan directory (use /.claude/plan instead)
+spec/plan/

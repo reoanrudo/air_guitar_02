@@ -20,4 +20,22 @@ urlpatterns = [
     ),
     # ゲーム結果保存API
     path("api/save/", views.save_game_result, name="save_result"),
+    # Air Guitar Pro - ロビー
+    path(
+        "air-guitar-pro/",
+        views.AirGuitarProLobbyView.as_view(),
+        name="air_guitar_pro_lobby",
+    ),
+    # Air Guitar Pro - PCプレイヤー
+    path(
+        "air-guitar-pro/pc/",
+        views.AirGuitarProPCView.as_view(),
+        name="air_guitar_pro_pc",
+    ),
+    # Air Guitar Pro - モバイルコントローラー
+    path(
+        "air-guitar-pro/mobile/",
+        views.AirGuitarProMobileView.as_view(),
+        name="air_guitar_pro_mobile",
+    ),
 ]
