@@ -1,1 +1,0 @@
-.claude/spec/docs/TASK_2.9_ACHIEVEMENT_SYSTEM_SUMMARY.md

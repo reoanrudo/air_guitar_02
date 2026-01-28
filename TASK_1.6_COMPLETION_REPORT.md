@@ -1,1 +1,0 @@
-.claude/spec/docs/TASK_1.6_COMPLETION_REPORT.md

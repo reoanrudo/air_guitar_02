@@ -1,1 +1,0 @@
-.claude/spec/docs/README.md

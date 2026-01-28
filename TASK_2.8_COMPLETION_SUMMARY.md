@@ -1,1 +1,0 @@
-.claude/spec/docs/TASK_2.8_COMPLETION_SUMMARY.md

@@ -1,1 +1,0 @@
-.claude/spec/docs/task.md

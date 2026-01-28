@@ -1,1 +1,0 @@
-.claude/spec/docs/PHASE_2_REFACTORING_REPORT.md

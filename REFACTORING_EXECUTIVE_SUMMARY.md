@@ -1,1 +1,0 @@
-.claude/spec/docs/REFACTORING_EXECUTIVE_SUMMARY.md
